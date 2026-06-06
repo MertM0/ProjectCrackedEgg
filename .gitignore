@@ -82,3 +82,4 @@ DerivedDataCache/*
 .editorconfig
 .vsconfig
 .gitattributes
+.github
