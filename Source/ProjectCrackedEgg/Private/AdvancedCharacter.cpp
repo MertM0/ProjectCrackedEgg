@@ -36,6 +36,11 @@ AAdvancedCharacter::AAdvancedCharacter()
 	RollCooldown = 1.5f;
 	bCanRoll = true;
 	bIsSprinting = false;
+	bIsAttacking = false;
+	bSaveAttack = false;
+	bComboWindowOpen = false;
+	bIsSweeping = false;
+	ComboIndex = 0;
 	SprintMultiplier = 1.5f;
 	InteractionRange = 300.0f;
 }
@@ -61,6 +66,11 @@ void AAdvancedCharacter::BeginPlay()
 void AAdvancedCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	if (bIsSweeping)
+	{
+		PerformWeaponSweep();
+	}
 }
 
 void AAdvancedCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -117,9 +127,84 @@ void AAdvancedCharacter::Look(const FInputActionValue& Value)
 
 void AAdvancedCharacter::LightAttack()
 {
+	if (bIsAttacking)
+	{
+		if (bComboWindowOpen)
+		{
+			bComboWindowOpen = false;
+			ComboIndex++;
+			if (ComboIndex > 4)
+			{
+				ComboIndex = 1;
+			}
+			PlayLightAttackMontage(ComboIndex);
+		}
+		else
+		{
+			bSaveAttack = true;
+		}
+	}
+	else
+	{
+		bIsAttacking = true;
+		ComboIndex = 1;
+		PlayLightAttackMontage(ComboIndex);
+	}
 }
 
 void AAdvancedCharacter::HeavyAttack()
+{
+	if (!bIsAttacking)
+	{
+		bIsAttacking = true;
+		
+		if (APlayerController* PC = Cast<APlayerController>(Controller))
+		{
+			PC->SetIgnoreMoveInput(true);
+		}
+
+		PlayHeavyAttackMontage();
+	}
+}
+
+void AAdvancedCharacter::SaveCombo()
+{
+	if (bSaveAttack)
+	{
+		bSaveAttack = false;
+		ComboIndex++;
+
+		if (ComboIndex > 4)
+		{
+			ComboIndex = 1;
+		}
+
+		PlayLightAttackMontage(ComboIndex);
+	}
+	else
+	{
+		bComboWindowOpen = true;
+	}
+}
+
+void AAdvancedCharacter::ResetCombo()
+{
+	bIsAttacking = false;
+	bSaveAttack = false;
+	bComboWindowOpen = false;
+	ComboIndex = 0;
+
+	if (APlayerController* PC = Cast<APlayerController>(Controller))
+	{
+		PC->SetIgnoreMoveInput(false);
+	}
+}
+
+void AAdvancedCharacter::PlayLightAttackMontage_Implementation(int32 ComboStep)
+{
+}
+
+void AAdvancedCharacter::PlayHeavyAttackMontage_Implementation()
 {
 }
 
@@ -199,4 +284,68 @@ void AAdvancedCharacter::ExecuteInteractionLineTrace()
 			IGameplayInterface::Execute_Interact(HitActor, this);
 		}
 	}
+}
+
+void AAdvancedCharacter::StartWeaponSweep()
+{
+	bIsSweeping = true;
+	HitActorsDuringAttack.Empty();
+	HitActorsDuringAttack.Add(this);
+
+	if (GetMesh())
+	{
+		PreviousWeaponStart = GetMesh()->GetSocketLocation(TEXT("BaseSocket"));
+		PreviousWeaponEnd = GetMesh()->GetSocketLocation(TEXT("TipSocket"));
+	}
+}
+
+void AAdvancedCharacter::StopWeaponSweep()
+{
+	bIsSweeping = false;
+	HitActorsDuringAttack.Empty();
+}
+
+void AAdvancedCharacter::PerformWeaponSweep()
+{
+	if (!GetMesh()) return;
+
+	FVector CurrentWeaponStart = GetMesh()->GetSocketLocation(TEXT("BaseSocket"));
+	FVector CurrentWeaponEnd = GetMesh()->GetSocketLocation(TEXT("TipSocket"));
+
+	FVector PreviousMidpoint = (PreviousWeaponStart + PreviousWeaponEnd) * 0.5f;
+	FVector CurrentMidpoint = (CurrentWeaponStart + CurrentWeaponEnd) * 0.5f;
+	
+	float WeaponLength = FVector::Dist(CurrentWeaponStart, CurrentWeaponEnd);
+	FVector HalfSize(10.0f, 10.0f, WeaponLength * 0.5f);
+	
+	FQuat TraceRotation = (CurrentWeaponEnd - CurrentWeaponStart).ToOrientationQuat();
+	
+	FHitResult HitResult;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActors(HitActorsDuringAttack);
+	
+	bool bHit = GetWorld()->SweepSingleByChannel(
+		HitResult,
+		PreviousMidpoint,
+		CurrentMidpoint,
+		TraceRotation,
+		ECC_Visibility,
+		FCollisionShape::MakeBox(HalfSize),
+		CollisionParams
+	);
+
+	if (bHit && HitResult.GetActor())
+	{
+		AActor* HitActor = HitResult.GetActor();
+		HitActorsDuringAttack.Add(HitActor);
+		
+		if (HitActor->Implements<UGameplayInterface>())
+		{
+			float DamageToApply = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 10.0f;
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, DamageToApply);
+		}
+	}
+
+	PreviousWeaponStart = CurrentWeaponStart;
+	PreviousWeaponEnd = CurrentWeaponEnd;
 }

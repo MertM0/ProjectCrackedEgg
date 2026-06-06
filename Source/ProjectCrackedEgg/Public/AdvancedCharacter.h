@@ -65,6 +65,26 @@ protected:
 	UFUNCTION(BlueprintPure, Category = "Movement")
 	bool IsSprinting() const { return bIsSprinting; }
 
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StartWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StopWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SaveCombo();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ResetCombo();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void PlayLightAttackMontage(int32 ComboStep);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void PlayHeavyAttackMontage();
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -75,6 +95,18 @@ protected:
 	bool bIsSprinting;
 	FTimerHandle TimerHandle_RollCooldown;
 	void ResetRoll();
+
+	bool bIsAttacking;
+	bool bSaveAttack;
+	bool bComboWindowOpen;
+	bool bIsSweeping;
+	int32 ComboIndex;
+
+	TArray<AActor*> HitActorsDuringAttack;
+	FVector PreviousWeaponStart;
+	FVector PreviousWeaponEnd;
+
+	void PerformWeaponSweep();
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAttributeComponent* AttributeComponent;
