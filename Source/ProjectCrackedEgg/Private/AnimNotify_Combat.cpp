@@ -15,6 +15,19 @@ void UAnimNotify_StartSweep::Notify(USkeletalMeshComponent* MeshComp, UAnimSeque
 	}
 }
 
+void UAnimNotify_StartHeavySweep::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
+{
+	Super::Notify(MeshComp, Animation, EventReference);
+	
+	if (MeshComp && MeshComp->GetOwner())
+	{
+		if (AAdvancedCharacter* PlayerChar = Cast<AAdvancedCharacter>(MeshComp->GetOwner()))
+		{
+			PlayerChar->PerformHeavySweep();
+		}
+	}
+}
+
 void UAnimNotify_StopSweep::Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference)
 {
 	Super::Notify(MeshComp, Animation, EventReference);

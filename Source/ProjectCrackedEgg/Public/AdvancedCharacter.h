@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "GameplayInterface.h"
 #include "AdvancedCharacter.generated.h"
 
 class UAttributeComponent;
@@ -12,7 +13,7 @@ class UCameraComponent;
 class USpringArmComponent;
 
 UCLASS()
-class PROJECTCRACKEDEGG_API AAdvancedCharacter : public ACharacter
+class PROJECTCRACKEDEGG_API AAdvancedCharacter : public ACharacter, public IGameplayInterface
 {
 	GENERATED_BODY()
 
@@ -85,6 +86,14 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
 	void PlayHeavyAttackMontage();
 
+	virtual void TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformHeavySweep();
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -106,8 +115,6 @@ protected:
 	FVector PreviousWeaponStart;
 	FVector PreviousWeaponEnd;
 
-	void PerformWeaponSweep();
-
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAttributeComponent* AttributeComponent;
 
@@ -128,4 +135,22 @@ protected:
     
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
 	float InteractionRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	class UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float HitReactChance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	class UParticleSystem* HitVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	FVector LightAttackHitboxSize;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float HeavyAttackHitboxRadius;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float HeavyAttackDamageMultiplier;
 };

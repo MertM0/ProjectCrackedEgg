@@ -28,5 +28,5 @@ public:
 	void Interact(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Damage")
-	void TakeElementalDamage(EDragonElement Element, float Damage);
+	void TakeElementalDamage(EDragonElement Element, float Damage, AActor* DamageInstigator);
 };

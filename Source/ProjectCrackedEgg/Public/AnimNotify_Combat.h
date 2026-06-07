@@ -5,7 +5,7 @@
 #include "AnimNotify_Combat.generated.h"
 
 // ---------------------------------------------------------
-// Start Weapon Sweep
+// Start Weapon Sweep (Light Attack)
 // ---------------------------------------------------------
 UCLASS()
 class PROJECTCRACKEDEGG_API UAnimNotify_StartSweep : public UAnimNotify
@@ -16,7 +16,18 @@ public:
 };
 
 // ---------------------------------------------------------
-// Stop Weapon Sweep
+// Start Heavy Sweep (360 Attack)
+// ---------------------------------------------------------
+UCLASS()
+class PROJECTCRACKEDEGG_API UAnimNotify_StartHeavySweep : public UAnimNotify
+{
+	GENERATED_BODY()
+public:
+	virtual void Notify(USkeletalMeshComponent* MeshComp, UAnimSequenceBase* Animation, const FAnimNotifyEventReference& EventReference) override;
+};
+
+// ---------------------------------------------------------
+// Stop Weapon Sweep (For both)
 // ---------------------------------------------------------
 UCLASS()
 class PROJECTCRACKEDEGG_API UAnimNotify_StopSweep : public UAnimNotify

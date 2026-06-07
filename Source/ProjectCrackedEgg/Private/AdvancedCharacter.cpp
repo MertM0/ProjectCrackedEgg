@@ -4,15 +4,19 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/Controller.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/World.h"
 #include "DrawDebugHelpers.h"
+#include "Kismet/GameplayStatics.h"
 
 AAdvancedCharacter::AAdvancedCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
+
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
@@ -43,6 +47,10 @@ AAdvancedCharacter::AAdvancedCharacter()
 	ComboIndex = 0;
 	SprintMultiplier = 1.5f;
 	InteractionRange = 300.0f;
+	HitReactChance = 0.5f;
+	LightAttackHitboxSize = FVector(75.0f, 75.0f, 75.0f);
+	HeavyAttackHitboxRadius = 150.0f;
+	HeavyAttackDamageMultiplier = 1.5f;
 }
 
 void AAdvancedCharacter::BeginPlay()
@@ -193,6 +201,7 @@ void AAdvancedCharacter::ResetCombo()
 	bSaveAttack = false;
 	bComboWindowOpen = false;
 	ComboIndex = 0;
+	StopWeaponSweep();
 
 	if (APlayerController* PC = Cast<APlayerController>(Controller))
 	{
@@ -258,6 +267,28 @@ void AAdvancedCharacter::ResetRoll()
 	bCanRoll = true;
 }
 
+void AAdvancedCharacter::TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator)
+{
+	if (AttributeComponent && AttributeComponent->IsAlive())
+	{
+		AttributeComponent->ApplyHealthChange(-Damage);
+
+		if (HitVFX)
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), HitVFX, GetActorLocation(), GetActorRotation());
+		}
+
+		if (AttributeComponent->IsAlive())
+		{
+			if (HitReactMontage && FMath::FRand() <= HitReactChance)
+			{
+				ResetCombo();
+				PlayAnimMontage(HitReactMontage);
+			}
+		}
+	}
+}
+
 void AAdvancedCharacter::ExecuteInteractionLineTrace()
 {
 	if (!Controller) return;
@@ -294,8 +325,8 @@ void AAdvancedCharacter::StartWeaponSweep()
 
 	if (GetMesh())
 	{
-		PreviousWeaponStart = GetMesh()->GetSocketLocation(TEXT("BaseSocket"));
-		PreviousWeaponEnd = GetMesh()->GetSocketLocation(TEXT("TipSocket"));
+		PreviousWeaponStart = GetMesh()->GetSocketLocation(TEXT("FX_weapon_base"));
+		PreviousWeaponEnd = GetMesh()->GetSocketLocation(TEXT("FX_weapon_tip"));
 	}
 }
 
@@ -307,32 +338,19 @@ void AAdvancedCharacter::StopWeaponSweep()
 
 void AAdvancedCharacter::PerformWeaponSweep()
 {
-	if (!GetMesh()) return;
+	FVector StartLocation = GetActorLocation();
+	FVector ForwardVector = GetActorForwardVector();
+	FVector EndLocation = StartLocation + (ForwardVector * 150.0f);
 
-	FVector CurrentWeaponStart = GetMesh()->GetSocketLocation(TEXT("BaseSocket"));
-	FVector CurrentWeaponEnd = GetMesh()->GetSocketLocation(TEXT("TipSocket"));
+	FCollisionShape BoxShape = FCollisionShape::MakeBox(LightAttackHitboxSize);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
 
-	FVector PreviousMidpoint = (PreviousWeaponStart + PreviousWeaponEnd) * 0.5f;
-	FVector CurrentMidpoint = (CurrentWeaponStart + CurrentWeaponEnd) * 0.5f;
-	
-	float WeaponLength = FVector::Dist(CurrentWeaponStart, CurrentWeaponEnd);
-	FVector HalfSize(10.0f, 10.0f, WeaponLength * 0.5f);
-	
-	FQuat TraceRotation = (CurrentWeaponEnd - CurrentWeaponStart).ToOrientationQuat();
-	
 	FHitResult HitResult;
-	FCollisionQueryParams CollisionParams;
-	CollisionParams.AddIgnoredActors(HitActorsDuringAttack);
-	
-	bool bHit = GetWorld()->SweepSingleByChannel(
-		HitResult,
-		PreviousMidpoint,
-		CurrentMidpoint,
-		TraceRotation,
-		ECC_Visibility,
-		FCollisionShape::MakeBox(HalfSize),
-		CollisionParams
-	);
+	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
+
+	DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * 75.0f), LightAttackHitboxSize, GetActorQuat(), bHit ? FColor::Green : FColor::Red, false, 2.0f);
 
 	if (bHit && HitResult.GetActor())
 	{
@@ -341,11 +359,38 @@ void AAdvancedCharacter::PerformWeaponSweep()
 		
 		if (HitActor->Implements<UGameplayInterface>())
 		{
-			float DamageToApply = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 10.0f;
-			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, DamageToApply);
+			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 10.0f;
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
 		}
 	}
+}
 
-	PreviousWeaponStart = CurrentWeaponStart;
-	PreviousWeaponEnd = CurrentWeaponEnd;
+void AAdvancedCharacter::PerformHeavySweep()
+{
+	FVector SweepLocation = GetActorLocation();
+	
+	FCollisionShape SphereShape = FCollisionShape::MakeSphere(HeavyAttackHitboxRadius);
+	FCollisionQueryParams QueryParams;
+	QueryParams.AddIgnoredActor(this);
+	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
+
+	TArray<FHitResult> HitResults;
+	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, SweepLocation, SweepLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
+
+	DrawDebugSphere(GetWorld(), SweepLocation, HeavyAttackHitboxRadius, 12, bHit ? FColor::Green : FColor::Red, false, 2.0f);
+
+	if (bHit)
+	{
+		for (const FHitResult& Hit : HitResults)
+		{
+			AActor* HitActor = Hit.GetActor();
+			if (HitActor && !HitActorsDuringAttack.Contains(HitActor) && HitActor->Implements<UGameplayInterface>())
+			{
+				HitActorsDuringAttack.Add(HitActor);
+				
+				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier) : 15.0f;
+				IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
+			}
+		}
+	}
 }
