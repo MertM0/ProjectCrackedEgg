@@ -1,6 +1,7 @@
-// Fill out your copyright notice in the Description page of Project Settings.
+
 
 using UnrealBuildTool;
+using System.IO;
 
 public class ProjectCrackedEgg : ModuleRules
 {
@@ -8,16 +9,22 @@ public class ProjectCrackedEgg : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "AIModule", "NavigationSystem" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "AIModule", "NavigationSystem", "UMG", "GameplayTasks" });
 
-		PrivateDependencyModuleNames.AddRange(new string[] {  });
+		PublicIncludePaths.AddRange(new string[] {
+			Path.Combine(ModuleDirectory, "Public"),
+			Path.Combine(ModuleDirectory, "Public/Knight"),
+			Path.Combine(ModuleDirectory, "Public/Dragon"),
+			Path.Combine(ModuleDirectory, "Public/Enemies"),
+			Path.Combine(ModuleDirectory, "Public/Components"),
+			Path.Combine(ModuleDirectory, "Public/StatusEffects"),
+			Path.Combine(ModuleDirectory, "Public/Core")
+		});
 
-		// Uncomment if you are using Slate UI
-		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
-		
-		// Uncomment if you are using online features
-		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
+		PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 
-		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
+
+
 	}
 }
+

@@ -1,0 +1,176 @@
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/Character.h"
+#include "InputActionValue.h"
+#include "GameplayInterface.h"
+#include "AdvancedCharacter.generated.h"
+
+class UAttributeComponent;
+class UInputMappingContext;
+class UInputAction;
+class UCameraComponent;
+class USpringArmComponent;
+
+UCLASS()
+class PROJECTCRACKEDEGG_API AAdvancedCharacter : public ACharacter, public IGameplayInterface
+{
+	GENERATED_BODY()
+
+public:
+	AAdvancedCharacter();
+
+protected:
+	virtual void BeginPlay() override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputMappingContext* DefaultMappingContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* MoveAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LookAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* JumpAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* SprintAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* LightAttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* HeavyAttackAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* RollAction;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Input")
+	UInputAction* InteractAction;
+
+	void Move(const FInputActionValue& Value);
+	void Look(const FInputActionValue& Value);
+	void LightAttack();
+	void HeavyAttack();
+	void StartSprint();
+	void StopSprint();
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void ExecuteRoll();
+
+	UFUNCTION(BlueprintCallable, Category = "Actions")
+	void ExecuteInteractionLineTrace();
+
+	UFUNCTION(BlueprintPure, Category = "Movement")
+	bool IsSprinting() const { return bIsSprinting; }
+
+public:
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StartWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void StopWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SaveCombo();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void ResetCombo();
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void PlayLightAttackMontage(int32 ComboStep);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
+	void PlayHeavyAttackMontage();
+
+	virtual void TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformWeaponSweep();
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void PerformHeavySweep();
+
+	UPROPERTY(BlueprintReadOnly, Category = "Combat")
+	AActor* LastAttackedEnemy;
+
+public:	
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+protected:
+	bool bIsDead;
+	bool bCanRoll;
+	bool bIsSprinting;
+	FTimerHandle TimerHandle_RollCooldown;
+	void ResetRoll();
+
+	UFUNCTION()
+	void HandleDeath(UAttributeComponent* AttributeComp);
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Death")
+	void OnDeath();
+
+	FTimerHandle TimerHandle_Ragdoll;
+	FTimerHandle TimerHandle_DeathSequence;
+
+	void TriggerRagdoll();
+	void OnDeathSequenceFinished();
+
+	bool bIsAttacking;
+	bool bSaveAttack;
+	bool bComboWindowOpen;
+	bool bIsSweeping;
+	int32 ComboIndex;
+
+	TArray<AActor*> HitActorsDuringAttack;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAttributeComponent* AttributeComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USpringArmComponent* SpringArmComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UCameraComponent* CameraComponent;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float RollStrength;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float RollCooldown;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
+	float SprintMultiplier;
+    
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Interaction")
+	float InteractionRange;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	class UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	class UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat", meta = (ClampMin = "0.0", ClampMax = "1.0"))
+	float HitReactChance;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	class UParticleSystem* HitVFX;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	FVector LightAttackHitboxSize;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float HeavyAttackHitboxRadius;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	float HeavyAttackDamageMultiplier;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UI")
+	TSubclassOf<class ADamageTextActor> DamageTextClass;
+};
