@@ -9,8 +9,6 @@ enum class EAttributeType : uint8
 {
 	Health			UMETA(DisplayName = "Health"),
 	MaxHealth		UMETA(DisplayName = "Max Health"),
-	Mana			UMETA(DisplayName = "Mana"),
-	MaxMana			UMETA(DisplayName = "Max Mana"),
 	BaseDamage		UMETA(DisplayName = "Base Damage"),
 	MovementSpeed	UMETA(DisplayName = "Movement Speed")
 };
@@ -42,11 +40,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Health")
 	float CurrentHealth;
 
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Mana")
-	float MaxMana;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Mana")
-	float CurrentMana;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Combat")
 	float BaseDamage;
@@ -84,8 +77,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
 	void ApplyHealthChange(float Delta);
 
-	UFUNCTION(BlueprintCallable, Category = "Attributes|Mana")
-	void ApplyManaChange(float Delta);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Progression")
 	void AddXP(int32 XPToAdd);
@@ -102,8 +93,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	float HealthUpgradeAmount = 10.0f;
 	
-	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
-	float ManaUpgradeAmount = 5.0f;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	float DamageUpgradeAmount = 2.0f;

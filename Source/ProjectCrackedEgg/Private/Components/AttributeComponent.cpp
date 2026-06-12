@@ -7,8 +7,7 @@ UAttributeComponent::UAttributeComponent()
 
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
-	MaxMana = 50.0f;
-	CurrentMana = MaxMana;
+
 	BaseDamage = 10.0f;
 	MovementSpeed = 600.0f;
 
@@ -24,7 +23,7 @@ void UAttributeComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHealth = FMath::Clamp(CurrentHealth, 0.0f, MaxHealth);
-	CurrentMana = FMath::Clamp(CurrentMana, 0.0f, MaxMana);
+
 }
 
 int32 UAttributeComponent::CalculateRequiredXPForNextLevel() const
@@ -54,21 +53,7 @@ void UAttributeComponent::SetAttributeValue(EAttributeType AttributeType, float 
 			bChanged = !FMath::IsNearlyEqual(OldValue, MaxHealth);
 			break;
 		}
-		case EAttributeType::Mana:
-		{
-			OldValue = CurrentMana;
-			CurrentMana = FMath::Clamp(NewValue, 0.0f, MaxMana);
-			bChanged = !FMath::IsNearlyEqual(OldValue, CurrentMana);
-			break;
-		}
-		case EAttributeType::MaxMana:
-		{
-			OldValue = MaxMana;
-			MaxMana = FMath::Max(0.0f, NewValue);
-			CurrentMana = FMath::Clamp(CurrentMana, 0.0f, MaxMana);
-			bChanged = !FMath::IsNearlyEqual(OldValue, MaxMana);
-			break;
-		}
+
 		case EAttributeType::BaseDamage:
 		{
 			OldValue = BaseDamage;
@@ -97,8 +82,7 @@ float UAttributeComponent::GetAttributeValue(EAttributeType AttributeType) const
 	{
 		case EAttributeType::Health: return CurrentHealth;
 		case EAttributeType::MaxHealth: return MaxHealth;
-		case EAttributeType::Mana: return CurrentMana;
-		case EAttributeType::MaxMana: return MaxMana;
+
 		case EAttributeType::BaseDamage: return BaseDamage;
 		case EAttributeType::MovementSpeed: return MovementSpeed;
 	}
@@ -121,10 +105,7 @@ void UAttributeComponent::ApplyHealthChange(float Delta)
 	}
 }
 
-void UAttributeComponent::ApplyManaChange(float Delta)
-{
-	SetAttributeValue(EAttributeType::Mana, CurrentMana + Delta);
-}
+
 
 void UAttributeComponent::AddXP(int32 XPToAdd)
 {
@@ -161,13 +142,6 @@ bool UAttributeComponent::UpgradeStat(EAttributeType StatToUpgrade)
 		{
 			SetAttributeValue(EAttributeType::MaxHealth, MaxHealth + HealthUpgradeAmount);
 			ApplyHealthChange(HealthUpgradeAmount);
-			break;
-		}
-		case EAttributeType::MaxMana:
-		case EAttributeType::Mana:
-		{
-			SetAttributeValue(EAttributeType::MaxMana, MaxMana + ManaUpgradeAmount);
-			ApplyManaChange(ManaUpgradeAmount);
 			break;
 		}
 		case EAttributeType::BaseDamage:
