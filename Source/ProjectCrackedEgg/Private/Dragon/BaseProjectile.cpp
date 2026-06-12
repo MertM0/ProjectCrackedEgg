@@ -2,6 +2,8 @@
 #include "Components/SphereComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameplayInterface.h"
+#include "AdvancedCharacter.h"
+#include "DragonCompanion.h"
 
 ABaseProjectile::ABaseProjectile()
 {
@@ -149,6 +151,19 @@ void ABaseProjectile::ProcessImpact(AActor* OtherActor)
 {
 	if (OtherActor && OtherActor != this && OtherActor != ProjectileInstigator)
 	{
+		bool bInstigatorFriendly = false;
+		if (ProjectileInstigator)
+		{
+			bInstigatorFriendly = ProjectileInstigator->IsA(AAdvancedCharacter::StaticClass()) || ProjectileInstigator->IsA(ADragonCompanion::StaticClass());
+		}
+
+		bool bTargetFriendly = OtherActor->IsA(AAdvancedCharacter::StaticClass()) || OtherActor->IsA(ADragonCompanion::StaticClass());
+
+		if (bInstigatorFriendly && bTargetFriendly)
+		{
+			return;
+		}
+
 		if (OtherActor->Implements<UGameplayInterface>())
 		{
 			IGameplayInterface::Execute_TakeElementalDamage(OtherActor, ProjectileElement, ProjectileDamage, ProjectileInstigator);
