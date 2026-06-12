@@ -8,6 +8,9 @@ UAttributeComponent::UAttributeComponent()
 	MaxHealth = 100.0f;
 	CurrentHealth = MaxHealth;
 
+	MaxStamina = 100.0f;
+	CurrentStamina = MaxStamina;
+
 	BaseDamage = 10.0f;
 	MovementSpeed = 600.0f;
 
@@ -23,7 +26,7 @@ void UAttributeComponent::BeginPlay()
 	Super::BeginPlay();
 
 	CurrentHealth = FMath::Clamp(CurrentHealth, 0.0f, MaxHealth);
-
+	CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
 }
 
 int32 UAttributeComponent::CalculateRequiredXPForNextLevel() const
@@ -53,7 +56,21 @@ void UAttributeComponent::SetAttributeValue(EAttributeType AttributeType, float 
 			bChanged = !FMath::IsNearlyEqual(OldValue, MaxHealth);
 			break;
 		}
-
+		case EAttributeType::Stamina:
+		{
+			OldValue = CurrentStamina;
+			CurrentStamina = FMath::Clamp(NewValue, 0.0f, MaxStamina);
+			bChanged = !FMath::IsNearlyEqual(OldValue, CurrentStamina);
+			break;
+		}
+		case EAttributeType::MaxStamina:
+		{
+			OldValue = MaxStamina;
+			MaxStamina = FMath::Max(0.0f, NewValue);
+			CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
+			bChanged = !FMath::IsNearlyEqual(OldValue, MaxStamina);
+			break;
+		}
 		case EAttributeType::BaseDamage:
 		{
 			OldValue = BaseDamage;
@@ -82,7 +99,8 @@ float UAttributeComponent::GetAttributeValue(EAttributeType AttributeType) const
 	{
 		case EAttributeType::Health: return CurrentHealth;
 		case EAttributeType::MaxHealth: return MaxHealth;
-
+		case EAttributeType::Stamina: return CurrentStamina;
+		case EAttributeType::MaxStamina: return MaxStamina;
 		case EAttributeType::BaseDamage: return BaseDamage;
 		case EAttributeType::MovementSpeed: return MovementSpeed;
 	}
@@ -103,6 +121,11 @@ void UAttributeComponent::ApplyHealthChange(float Delta)
 	{
 		OnDeath.Broadcast(this);
 	}
+}
+
+void UAttributeComponent::ApplyStaminaChange(float Delta)
+{
+	SetAttributeValue(EAttributeType::Stamina, CurrentStamina + Delta);
 }
 
 
@@ -129,6 +152,8 @@ void UAttributeComponent::AddXP(int32 XPToAdd)
 	{
 		OnLevelUp.Broadcast(this, Level, StatPoints);
 	}
+
+	OnXPChanged.Broadcast(this, CurrentXP, RequiredXP);
 }
 
 bool UAttributeComponent::UpgradeStat(EAttributeType StatToUpgrade)
@@ -142,6 +167,13 @@ bool UAttributeComponent::UpgradeStat(EAttributeType StatToUpgrade)
 		{
 			SetAttributeValue(EAttributeType::MaxHealth, MaxHealth + HealthUpgradeAmount);
 			ApplyHealthChange(HealthUpgradeAmount);
+			break;
+		}
+		case EAttributeType::MaxStamina:
+		case EAttributeType::Stamina:
+		{
+			SetAttributeValue(EAttributeType::MaxStamina, MaxStamina + StaminaUpgradeAmount);
+			ApplyStaminaChange(StaminaUpgradeAmount);
 			break;
 		}
 		case EAttributeType::BaseDamage:

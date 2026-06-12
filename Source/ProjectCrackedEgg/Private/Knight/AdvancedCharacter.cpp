@@ -45,7 +45,6 @@ AAdvancedCharacter::AAdvancedCharacter()
 	bIsAttacking = false;
 	bSaveAttack = false;
 	bComboWindowOpen = false;
-	bIsSweeping = false;
 	ComboIndex = 0;
 	SprintMultiplier = 1.5f;
 	InteractionRange = 300.0f;
@@ -55,6 +54,15 @@ AAdvancedCharacter::AAdvancedCharacter()
 	HeavyAttackHitboxRadius = 150.0f;
 	HeavyAttackDamageMultiplier = 1.5f;
 	bIsDead = false;
+
+	SprintStaminaDrainRate = 15.0f;
+	JumpStaminaCost = 10.0f;
+	RollStaminaCost = 20.0f;
+	LightAttackStaminaCost = 15.0f;
+	HeavyAttackStaminaCost = 30.0f;
+	StaminaRegenRate = 20.0f;
+	StaminaRegenDelay = 1.5f;
+	StaminaRegenTimer = 0.0f;
 }
 
 void AAdvancedCharacter::BeginPlay()
@@ -80,9 +88,30 @@ void AAdvancedCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (bIsSweeping)
+	if (!bIsDead && AttributeComponent)
 	{
-		PerformWeaponSweep();
+		if (bIsSprinting && GetVelocity().SizeSquared2D() > 0.0f)
+		{
+			float Drain = SprintStaminaDrainRate * DeltaTime;
+			AttributeComponent->ApplyStaminaChange(-Drain);
+			StaminaRegenTimer = StaminaRegenDelay;
+
+			if (AttributeComponent->GetAttributeValue(EAttributeType::Stamina) <= 0.0f)
+			{
+				StopSprint();
+			}
+		}
+		else
+		{
+			if (StaminaRegenTimer > 0.0f)
+			{
+				StaminaRegenTimer -= DeltaTime;
+			}
+			else
+			{
+				AttributeComponent->ApplyStaminaChange(StaminaRegenRate * DeltaTime);
+			}
+		}
 	}
 }
 
@@ -95,7 +124,7 @@ void AAdvancedCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAdvancedCharacter::Move);
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &AAdvancedCharacter::Look);
 		
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &AAdvancedCharacter::Jump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &AAdvancedCharacter::StartSprint);
@@ -140,6 +169,18 @@ void AAdvancedCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+void AAdvancedCharacter::Jump()
+{
+	if (bIsDead) return;
+
+	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) >= JumpStaminaCost)
+	{
+		Super::Jump();
+		AttributeComponent->ApplyStaminaChange(-JumpStaminaCost);
+		StaminaRegenTimer = StaminaRegenDelay;
+	}
+}
+
 void AAdvancedCharacter::LightAttack()
 {
 	if (bIsDead) return;
@@ -148,6 +189,13 @@ void AAdvancedCharacter::LightAttack()
 	{
 		if (bComboWindowOpen)
 		{
+			if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+			{
+				return;
+			}
+			AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+			StaminaRegenTimer = StaminaRegenDelay;
+
 			bComboWindowOpen = false;
 			ComboIndex++;
 			if (ComboIndex > 4)
@@ -163,6 +211,13 @@ void AAdvancedCharacter::LightAttack()
 	}
 	else
 	{
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+		{
+			return;
+		}
+		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+		StaminaRegenTimer = StaminaRegenDelay;
+
 		bIsAttacking = true;
 		ComboIndex = 1;
 		PlayLightAttackMontage(ComboIndex);
@@ -175,6 +230,13 @@ void AAdvancedCharacter::HeavyAttack()
 
 	if (!bIsAttacking)
 	{
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < HeavyAttackStaminaCost)
+		{
+			return;
+		}
+		AttributeComponent->ApplyStaminaChange(-HeavyAttackStaminaCost);
+		StaminaRegenTimer = StaminaRegenDelay;
+
 		bIsAttacking = true;
 		
 		if (APlayerController* PC = Cast<APlayerController>(Controller))
@@ -191,6 +253,15 @@ void AAdvancedCharacter::SaveCombo()
 	if (bSaveAttack)
 	{
 		bSaveAttack = false;
+
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+		{
+			ResetCombo();
+			return;
+		}
+		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+		StaminaRegenTimer = StaminaRegenDelay;
+
 		ComboIndex++;
 
 		if (ComboIndex > 4)
@@ -230,7 +301,9 @@ void AAdvancedCharacter::PlayHeavyAttackMontage_Implementation()
 
 void AAdvancedCharacter::StartSprint()
 {
-	if (AttributeComponent)
+	if (bIsDead) return;
+
+	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) > 0.0f)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed) * SprintMultiplier;
 		bIsSprinting = true;
@@ -252,6 +325,14 @@ void AAdvancedCharacter::ExecuteRoll()
 	{
 		return;
 	}
+
+	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < RollStaminaCost)
+	{
+		return;
+	}
+
+	AttributeComponent->ApplyStaminaChange(-RollStaminaCost);
+	StaminaRegenTimer = StaminaRegenDelay;
 
 	FVector LaunchDirection;
 
@@ -342,14 +423,15 @@ void AAdvancedCharacter::ExecuteInteractionLineTrace()
 
 void AAdvancedCharacter::StartWeaponSweep()
 {
-	bIsSweeping = true;
 	HitActorsDuringAttack.Empty();
 	HitActorsDuringAttack.Add(this);
+	GetWorldTimerManager().SetTimer(TimerHandle_WeaponSweep, this, &AAdvancedCharacter::PerformWeaponSweep, 0.05f, true);
+	PerformWeaponSweep();
 }
 
 void AAdvancedCharacter::StopWeaponSweep()
 {
-	bIsSweeping = false;
+	GetWorldTimerManager().ClearTimer(TimerHandle_WeaponSweep);
 	HitActorsDuringAttack.Empty();
 }
 

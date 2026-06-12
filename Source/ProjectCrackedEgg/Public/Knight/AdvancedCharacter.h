@@ -57,6 +57,8 @@ protected:
 	void StartSprint();
 	void StopSprint();
 
+	virtual void Jump() override;
+
 	UFUNCTION(BlueprintCallable, Category = "Actions")
 	void ExecuteRoll();
 
@@ -121,10 +123,11 @@ protected:
 	void TriggerRagdoll();
 	void OnDeathSequenceFinished();
 
+	FTimerHandle TimerHandle_WeaponSweep;
+
 	bool bIsAttacking;
 	bool bSaveAttack;
 	bool bComboWindowOpen;
-	bool bIsSweeping;
 	int32 ComboIndex;
 
 	TArray<AActor*> HitActorsDuringAttack;
@@ -170,6 +173,29 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float HeavyAttackDamageMultiplier;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float SprintStaminaDrainRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float JumpStaminaCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float RollStaminaCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float LightAttackStaminaCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float HeavyAttackStaminaCost;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float StaminaRegenRate;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	float StaminaRegenDelay;
+
+	float StaminaRegenTimer;
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class ADamageTextActor> DamageTextClass;

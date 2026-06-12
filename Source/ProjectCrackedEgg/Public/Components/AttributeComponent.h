@@ -10,12 +10,15 @@ enum class EAttributeType : uint8
 	Health			UMETA(DisplayName = "Health"),
 	MaxHealth		UMETA(DisplayName = "Max Health"),
 	BaseDamage		UMETA(DisplayName = "Base Damage"),
-	MovementSpeed	UMETA(DisplayName = "Movement Speed")
+	MovementSpeed	UMETA(DisplayName = "Movement Speed"),
+	Stamina			UMETA(DisplayName = "Stamina"),
+	MaxStamina		UMETA(DisplayName = "Max Stamina")
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_FourParams(FOnAttributeChangedSignature, UAttributeComponent*, AttributeComp, EAttributeType, AttributeType, float, OldValue, float, NewValue);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnLevelUpSignature, UAttributeComponent*, AttributeComp, int32, NewLevel, int32, AvailableStatPoints);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathSignature, UAttributeComponent*, AttributeComp);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnXPChangedSignature, UAttributeComponent*, AttributeComp, int32, NewXP, int32, RequiredXP);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class PROJECTCRACKEDEGG_API UAttributeComponent : public UActorComponent
@@ -40,6 +43,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Health")
 	float CurrentHealth;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Stamina")
+	float MaxStamina;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Stamina")
+	float CurrentStamina;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Combat")
 	float BaseDamage;
@@ -71,12 +79,17 @@ public:
 	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
 	FOnDeathSignature OnDeath;
 
+	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
+	FOnXPChangedSignature OnXPChanged;
+
 	UFUNCTION(BlueprintPure, Category = "Attributes")
 	float GetAttributeValue(EAttributeType AttributeType) const;
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Health")
 	void ApplyHealthChange(float Delta);
 
+	UFUNCTION(BlueprintCallable, Category = "Attributes|Stamina")
+	void ApplyStaminaChange(float Delta);
 
 	UFUNCTION(BlueprintCallable, Category = "Attributes|Progression")
 	void AddXP(int32 XPToAdd);
@@ -93,6 +106,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	float HealthUpgradeAmount = 10.0f;
 	
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
+	float StaminaUpgradeAmount = 20.0f;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	float DamageUpgradeAmount = 2.0f;
