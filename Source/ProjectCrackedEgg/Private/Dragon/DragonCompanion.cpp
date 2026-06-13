@@ -64,6 +64,11 @@ void ADragonCompanion::BeginPlay()
 
 	PreviousYaw = GetActorRotation().Yaw;
 
+	if (SpawnMontage)
+	{
+		PlayAnimMontage(SpawnMontage);
+	}
+
 	GetWorldTimerManager().SetTimer(TimerHandle_DecisionMaking, this, &ADragonCompanion::UpdateAI, 0.25f, true);
 }
 
@@ -105,6 +110,11 @@ void ADragonCompanion::Tick(float DeltaTime)
 		if (!bIsInCombat)
 		{
 			bIsFlying = (DistanceToPlayer > FlightDistanceThreshold);
+		}
+
+		if (AttributeComponent && AttributeComponent->Level < 2)
+		{
+			bIsFlying = false;
 		}
 
 		UCharacterMovementComponent* MoveComp = GetCharacterMovement();
@@ -225,7 +235,9 @@ void ADragonCompanion::UpdateAI()
 		bIsInCombat = true;
 		float CurrentTime = GetWorld()->GetTimeSeconds();
 
-		if (CurrentTime - LastRangedAttackTime >= RangedCooldown)
+		bool bCanUseRanged = AttributeComponent && AttributeComponent->Level >= 2;
+
+		if (bCanUseRanged && CurrentTime - LastRangedAttackTime >= RangedCooldown)
 		{
 			bIsFlying = true;
 
@@ -264,7 +276,7 @@ void ADragonCompanion::UpdateAI()
 		{
 			if (ClosestDistance > MeleeAttackRange + 150.0f)
 			{
-				bIsFlying = true;
+				bIsFlying = AttributeComponent && AttributeComponent->Level >= 2;
 
 				if (AIC->GetMoveStatus() == EPathFollowingStatus::Idle || CurrentMoveTarget != ClosestEnemy)
 				{
@@ -343,20 +355,7 @@ bool ADragonCompanion::IsPlayingAttackMontage() const
 	UAnimInstance* AnimInstance = GetMesh() ? GetMesh()->GetAnimInstance() : nullptr;
 	if (!AnimInstance) return false;
 
-	for (UAnimMontage* Montage : GroundMeleeMontages)
-	{
-		if (Montage && AnimInstance->Montage_IsActive(Montage))
-		{
-			return true;
-		}
-	}
-
-	if (AirRangedMontage && AnimInstance->Montage_IsActive(AirRangedMontage))
-	{
-		return true;
-	}
-
-	return false;
+	return AnimInstance->IsAnyMontagePlaying();
 }
 
 void ADragonCompanion::PerformMeleeAttack()
@@ -430,4 +429,9 @@ void ADragonCompanion::HandleLevelUp(UAttributeComponent* AttributeComp, int32 N
 	{
 		UGameplayStatics::SpawnEmitterAttached(LevelUpVFX, GetMesh(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, true);
 	}
+}
+
+void ADragonCompanion::SetDragonElement(EDragonElement NewElement)
+{
+	DragonElement = NewElement;
 }

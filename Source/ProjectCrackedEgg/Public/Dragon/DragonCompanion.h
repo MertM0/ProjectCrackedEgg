@@ -87,6 +87,9 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Visuals|Animation")
 	float FlightDirection;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Visuals|Animation")
+	UAnimMontage* SpawnMontage;
+
 	float PreviousYaw;
 	bool bIsInCombat;
 
@@ -111,6 +114,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SpawnProjectile(AActor* Target);
+
+	UFUNCTION(BlueprintCallable, Category = "Combat")
+	void SetDragonElement(EDragonElement NewElement);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Progression")
 	class UParticleSystem* LevelUpVFX;

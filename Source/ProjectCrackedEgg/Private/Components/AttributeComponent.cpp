@@ -19,6 +19,7 @@ UAttributeComponent::UAttributeComponent()
 	StatPoints = 0;
 	BaseXPRequirement = 100;
 	XPMultiplierPerLevel = 1.5f;
+	MaxLevelLimit = 99;
 
 	HealthLevel = 1;
 	StaminaLevel = 1;
@@ -138,6 +139,7 @@ void UAttributeComponent::ApplyStaminaChange(float Delta)
 void UAttributeComponent::AddXP(int32 XPToAdd)
 {
 	if (XPToAdd <= 0) return;
+	if (Level >= MaxLevelLimit) return;
 
 	CurrentXP += XPToAdd;
 
@@ -146,6 +148,11 @@ void UAttributeComponent::AddXP(int32 XPToAdd)
 
 	while (CurrentXP >= RequiredXP)
 	{
+		if (Level >= MaxLevelLimit)
+		{
+			CurrentXP = 0;
+			break;
+		}
 		CurrentXP -= RequiredXP;
 		Level++;
 		StatPoints++;

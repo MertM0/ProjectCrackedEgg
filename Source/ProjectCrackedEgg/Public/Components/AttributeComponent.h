@@ -82,6 +82,9 @@ public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	float XPMultiplierPerLevel;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
+	int32 MaxLevelLimit;
+
 	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
 	FOnAttributeChangedSignature OnAttributeChanged;
 

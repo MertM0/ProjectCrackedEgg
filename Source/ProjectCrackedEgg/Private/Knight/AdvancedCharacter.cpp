@@ -49,6 +49,7 @@ AAdvancedCharacter::AAdvancedCharacter()
 	ComboIndex = 0;
 	SprintMultiplier = 1.5f;
 	InteractionRange = 300.0f;
+	InteractionBoxHalfExtents = FVector(50.0f, 50.0f, 50.0f);
 	LastAttackedEnemy = nullptr;
 	HitReactChance = 0.5f;
 	LightAttackHitboxSize = FVector(75.0f, 75.0f, 75.0f);
@@ -418,18 +419,23 @@ void AAdvancedCharacter::ExecuteInteractionLineTrace()
 {
 	if (!Controller || bIsDead) return;
 
-	FVector StartLocation;
-	FRotator LookRotation;
-	Controller->GetPlayerViewPoint(StartLocation, LookRotation);
+	FVector StartLocation = GetActorLocation() + FVector(0.0f, 0.0f, 30.0f);
+	FVector ForwardVector = GetActorForwardVector();
+	FVector EndLocation = StartLocation + (ForwardVector * InteractionRange);
 
-	FVector LookDirection = LookRotation.Vector();
-	FVector EndLocation = StartLocation + (LookDirection * InteractionRange);
-
+	FCollisionShape BoxShape = FCollisionShape::MakeBox(InteractionBoxHalfExtents);
 	FHitResult HitResult;
 	FCollisionQueryParams CollisionParams;
 	CollisionParams.AddIgnoredActor(this);
 
-	bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, StartLocation, EndLocation, ECC_Visibility, CollisionParams);
+	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Visibility, BoxShape, CollisionParams);
+
+	FColor DebugColor = bHit ? FColor::Green : FColor::Red;
+	DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * (InteractionRange * 0.5f)), FVector(InteractionRange * 0.5f, InteractionBoxHalfExtents.Y, InteractionBoxHalfExtents.Z), GetActorQuat(), DebugColor, false, 2.0f, 0, 1.0f);
+	if (bHit)
+	{
+		DrawDebugPoint(GetWorld(), HitResult.ImpactPoint, 10.0f, FColor::Yellow, false, 2.0f);
+	}
 
 	if (bHit && HitResult.GetActor())
 	{
