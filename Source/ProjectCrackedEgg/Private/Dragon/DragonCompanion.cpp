@@ -383,7 +383,7 @@ void ADragonCompanion::PerformMeleeAttack()
 		if (HitActor != TargetPlayer && HitActor->Implements<UGameplayInterface>())
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 15.0f;
-			IGameplayInterface::Execute_TakeElementalDamage(HitActor, DragonElement, Damage, this);
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
 		}
 	}
 }
