@@ -7,6 +7,7 @@
 #include "AdvancedCharacter.generated.h"
 
 class UAttributeComponent;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnStaminaExhaustedActionSignature);
 class UInputMappingContext;
 class UInputAction;
 class UCameraComponent;
@@ -174,28 +175,37 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	float HeavyAttackDamageMultiplier;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float SprintStaminaDrainRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float JumpStaminaCost;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float RollStaminaCost;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float LightAttackStaminaCost;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float HeavyAttackStaminaCost;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float StaminaRegenRate;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Attributes|Stamina")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Stamina Settings")
 	float StaminaRegenDelay;
 
 	float StaminaRegenTimer;
+
+	UPROPERTY(BlueprintAssignable, Category = "Attributes|Events")
+	FOnStaminaExhaustedActionSignature OnStaminaExhaustedAction;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
+	class UParticleSystem* LevelUpVFX;
+
+	UFUNCTION()
+	void HandleLevelUp(UAttributeComponent* AttributeComp, int32 NewLevel, int32 AvailableStatPoints);
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class ADamageTextActor> DamageTextClass;

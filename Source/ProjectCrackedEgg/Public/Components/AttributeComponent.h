@@ -64,6 +64,18 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Progression")
 	int32 StatPoints;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Progression")
+	int32 HealthLevel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Progression")
+	int32 StaminaLevel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Progression")
+	int32 DamageLevel;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Attributes|Progression")
+	int32 SpeedLevel;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Attributes|Progression")
 	int32 BaseXPRequirement;
 

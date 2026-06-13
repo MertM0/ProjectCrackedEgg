@@ -12,6 +12,7 @@
 #include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "CrackedEggGameMode.h"
+#include "Dragon/DragonCompanion.h"
 #include "UI/DamageTextActor.h"
 
 AAdvancedCharacter::AAdvancedCharacter()
@@ -81,6 +82,7 @@ void AAdvancedCharacter::BeginPlay()
 	{
 		GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed);
 		AttributeComponent->OnDeath.AddDynamic(this, &AAdvancedCharacter::HandleDeath);
+		AttributeComponent->OnLevelUp.AddDynamic(this, &AAdvancedCharacter::HandleLevelUp);
 	}
 }
 
@@ -173,11 +175,18 @@ void AAdvancedCharacter::Jump()
 {
 	if (bIsDead) return;
 
-	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) >= JumpStaminaCost)
+	if (CanJump())
 	{
-		Super::Jump();
-		AttributeComponent->ApplyStaminaChange(-JumpStaminaCost);
-		StaminaRegenTimer = StaminaRegenDelay;
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) >= JumpStaminaCost)
+		{
+			Super::Jump();
+			AttributeComponent->ApplyStaminaChange(-JumpStaminaCost);
+			StaminaRegenTimer = StaminaRegenDelay;
+		}
+		else
+		{
+			OnStaminaExhaustedAction.Broadcast();
+		}
 	}
 }
 
@@ -191,6 +200,7 @@ void AAdvancedCharacter::LightAttack()
 		{
 			if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
 			{
+				OnStaminaExhaustedAction.Broadcast();
 				return;
 			}
 			AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
@@ -213,6 +223,7 @@ void AAdvancedCharacter::LightAttack()
 	{
 		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
 		{
+			OnStaminaExhaustedAction.Broadcast();
 			return;
 		}
 		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
@@ -232,6 +243,7 @@ void AAdvancedCharacter::HeavyAttack()
 	{
 		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < HeavyAttackStaminaCost)
 		{
+			OnStaminaExhaustedAction.Broadcast();
 			return;
 		}
 		AttributeComponent->ApplyStaminaChange(-HeavyAttackStaminaCost);
@@ -256,6 +268,7 @@ void AAdvancedCharacter::SaveCombo()
 
 		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
 		{
+			OnStaminaExhaustedAction.Broadcast();
 			ResetCombo();
 			return;
 		}
@@ -303,10 +316,17 @@ void AAdvancedCharacter::StartSprint()
 {
 	if (bIsDead) return;
 
-	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) > 0.0f)
+	if (AttributeComponent)
 	{
-		GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed) * SprintMultiplier;
-		bIsSprinting = true;
+		if (AttributeComponent->GetAttributeValue(EAttributeType::Stamina) > 0.0f)
+		{
+			GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed) * SprintMultiplier;
+			bIsSprinting = true;
+		}
+		else
+		{
+			OnStaminaExhaustedAction.Broadcast();
+		}
 	}
 }
 
@@ -328,6 +348,7 @@ void AAdvancedCharacter::ExecuteRoll()
 
 	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < RollStaminaCost)
 	{
+		OnStaminaExhaustedAction.Broadcast();
 		return;
 	}
 
@@ -446,6 +467,10 @@ void AAdvancedCharacter::PerformWeaponSweep()
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
 
+	TArray<AActor*> Companions;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADragonCompanion::StaticClass(), Companions);
+	QueryParams.AddIgnoredActors(Companions);
+
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
 
@@ -480,6 +505,10 @@ void AAdvancedCharacter::PerformHeavySweep()
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
+
+	TArray<AActor*> Companions;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADragonCompanion::StaticClass(), Companions);
+	QueryParams.AddIgnoredActors(Companions);
 
 	TArray<FHitResult> HitResults;
 	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, SweepLocation, SweepLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
@@ -560,5 +589,13 @@ void AAdvancedCharacter::OnDeathSequenceFinished()
 	if (ACrackedEggGameMode* GM = Cast<ACrackedEggGameMode>(UGameplayStatics::GetGameMode(this)))
 	{
 		GM->OnPlayerDied();
+	}
+}
+
+void AAdvancedCharacter::HandleLevelUp(UAttributeComponent* AttributeComp, int32 NewLevel, int32 AvailableStatPoints)
+{
+	if (LevelUpVFX)
+	{
+		UGameplayStatics::SpawnEmitterAttached(LevelUpVFX, GetMesh(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, true);
 	}
 }

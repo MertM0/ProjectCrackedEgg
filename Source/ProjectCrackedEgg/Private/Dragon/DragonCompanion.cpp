@@ -59,6 +59,7 @@ void ADragonCompanion::BeginPlay()
 	if (AttributeComponent)
 	{
 		GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed);
+		AttributeComponent->OnLevelUp.AddDynamic(this, &ADragonCompanion::HandleLevelUp);
 	}
 
 	PreviousYaw = GetActorRotation().Yaw;
@@ -367,6 +368,10 @@ void ADragonCompanion::PerformMeleeAttack()
 	FCollisionShape BoxShape = FCollisionShape::MakeBox(MeleeHitboxSize);
 	FCollisionQueryParams QueryParams;
 	QueryParams.AddIgnoredActor(this);
+	if (TargetPlayer)
+	{
+		QueryParams.AddIgnoredActor(TargetPlayer);
+	}
 
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
@@ -376,7 +381,7 @@ void ADragonCompanion::PerformMeleeAttack()
 	if (bHit && HitResult.GetActor())
 	{
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor->Implements<UGameplayInterface>())
+		if (HitActor != TargetPlayer && HitActor->Implements<UGameplayInterface>())
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 15.0f;
 			IGameplayInterface::Execute_TakeElementalDamage(HitActor, DragonElement, Damage, this);
@@ -416,5 +421,13 @@ void ADragonCompanion::SpawnProjectile(AActor* Target)
 		{
 			Projectile->AttachToComponent(DragonMesh, FAttachmentTransformRules::SnapToTargetNotIncludingScale, ProjectileSpawnSocket);
 		}
+	}
+}
+
+void ADragonCompanion::HandleLevelUp(UAttributeComponent* AttributeComp, int32 NewLevel, int32 AvailableStatPoints)
+{
+	if (LevelUpVFX)
+	{
+		UGameplayStatics::SpawnEmitterAttached(LevelUpVFX, GetMesh(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, true);
 	}
 }

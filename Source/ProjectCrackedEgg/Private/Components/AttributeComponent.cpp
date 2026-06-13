@@ -19,6 +19,11 @@ UAttributeComponent::UAttributeComponent()
 	StatPoints = 0;
 	BaseXPRequirement = 100;
 	XPMultiplierPerLevel = 1.5f;
+
+	HealthLevel = 1;
+	StaminaLevel = 1;
+	DamageLevel = 1;
+	SpeedLevel = 1;
 }
 
 void UAttributeComponent::BeginPlay()
@@ -167,6 +172,7 @@ bool UAttributeComponent::UpgradeStat(EAttributeType StatToUpgrade)
 		{
 			SetAttributeValue(EAttributeType::MaxHealth, MaxHealth + HealthUpgradeAmount);
 			ApplyHealthChange(HealthUpgradeAmount);
+			HealthLevel++;
 			break;
 		}
 		case EAttributeType::MaxStamina:
@@ -174,16 +180,19 @@ bool UAttributeComponent::UpgradeStat(EAttributeType StatToUpgrade)
 		{
 			SetAttributeValue(EAttributeType::MaxStamina, MaxStamina + StaminaUpgradeAmount);
 			ApplyStaminaChange(StaminaUpgradeAmount);
+			StaminaLevel++;
 			break;
 		}
 		case EAttributeType::BaseDamage:
 		{
 			SetAttributeValue(EAttributeType::BaseDamage, BaseDamage + DamageUpgradeAmount);
+			DamageLevel++;
 			break;
 		}
 		case EAttributeType::MovementSpeed:
 		{
 			SetAttributeValue(EAttributeType::MovementSpeed, MovementSpeed + MovementSpeedUpgradeAmount);
+			SpeedLevel++;
 			break;
 		}
 		default:

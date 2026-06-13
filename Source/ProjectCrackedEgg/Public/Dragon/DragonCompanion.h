@@ -111,4 +111,10 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void SpawnProjectile(AActor* Target);
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Progression")
+	class UParticleSystem* LevelUpVFX;
+
+	UFUNCTION()
+	void HandleLevelUp(UAttributeComponent* AttributeComp, int32 NewLevel, int32 AvailableStatPoints);
 };
