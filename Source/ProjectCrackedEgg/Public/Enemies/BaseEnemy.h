@@ -7,6 +7,7 @@
 
 class UAttributeComponent;
 class UStatusEffectManagerComponent;
+class UWidgetComponent;
 
 UCLASS()
 class PROJECTCRACKEDEGG_API ABaseEnemy : public ACharacter, public IGameplayInterface
@@ -24,6 +25,9 @@ protected:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UStatusEffectManagerComponent* StatusEffectManager;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UWidgetComponent* HealthBarWidgetComponent;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Status Effects")
 	TSubclassOf<class UStatusEffect> BurnEffectClass;
@@ -66,7 +70,26 @@ protected:
 
 	void TriggerRagdoll();
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	bool bHideHealthBarWhenFullHealth;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	float HealthBarVisibilityDuration;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
+	float MaxHealthBarDisplayDistance;
+
+	FTimerHandle TimerHandle_HideHealthBar;
+	FTimerHandle TimerHandle_DistanceCheck;
+
+	UFUNCTION()
+	void HideHealthBar();
+
+	void UpdateHealthBarVisibility();
+
 public:	
+	virtual void Tick(float DeltaTime) override;
+
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
 	virtual void TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* Instigator) override;

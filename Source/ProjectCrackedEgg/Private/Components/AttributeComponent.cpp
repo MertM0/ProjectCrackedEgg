@@ -31,8 +31,8 @@ void UAttributeComponent::BeginPlay()
 {
 	Super::BeginPlay();
 
-	CurrentHealth = FMath::Clamp(CurrentHealth, 0.0f, MaxHealth);
-	CurrentStamina = FMath::Clamp(CurrentStamina, 0.0f, MaxStamina);
+	CurrentHealth = MaxHealth;
+	CurrentStamina = MaxStamina;
 }
 
 int32 UAttributeComponent::CalculateRequiredXPForNextLevel() const

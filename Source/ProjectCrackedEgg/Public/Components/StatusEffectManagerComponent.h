@@ -29,6 +29,8 @@ public:
 	UFUNCTION(BlueprintPure, Category = "Status Effects")
 	bool HasActiveEffect(TSubclassOf<UStatusEffect> EffectClass) const;
 
+	const TArray<UStatusEffect*>& GetActiveEffects() const { return ActiveEffects; }
+
 protected:
 	UPROPERTY()
 	TArray<UStatusEffect*> ActiveEffects;

@@ -14,10 +14,13 @@
 #include "StatusEffect_Burn.h"
 #include "StatusEffect_Slow.h"
 #include "UI/DamageTextActor.h"
+#include "Components/WidgetComponent.h"
+#include "UI/EnemyHealthBarWidget.h"
 
 ABaseEnemy::ABaseEnemy()
 {
-	PrimaryActorTick.bCanEverTick = false;
+	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECC_Visibility, ECR_Block);
 
@@ -32,8 +35,17 @@ ABaseEnemy::ABaseEnemy()
 	ProximitySphere->SetCollisionResponseToAllChannels(ECR_Ignore);
 	ProximitySphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
 
+	HealthBarWidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("HealthBarWidgetComponent"));
+	HealthBarWidgetComponent->SetupAttachment(RootComponent);
+	HealthBarWidgetComponent->SetRelativeLocation(FVector(0.0f, 0.0f, 110.0f));
+	HealthBarWidgetComponent->SetWidgetSpace(EWidgetSpace::World);
+	HealthBarWidgetComponent->SetDrawAtDesiredSize(true);
+
 	RewardXP = 50;
 	HitReactChance = 0.5f;
+	bHideHealthBarWhenFullHealth = true;
+	HealthBarVisibilityDuration = 5.0f;
+	MaxHealthBarDisplayDistance = 1500.0f;
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
@@ -56,6 +68,12 @@ void ABaseEnemy::BeginPlay()
 	{
 		ProximitySphere->OnComponentBeginOverlap.AddDynamic(this, &ABaseEnemy::OnProximityOverlap);
 	}
+
+	if (HealthBarWidgetComponent)
+	{
+		HealthBarWidgetComponent->SetVisibility(false);
+		GetWorldTimerManager().SetTimer(TimerHandle_DistanceCheck, this, &ABaseEnemy::UpdateHealthBarVisibility, 0.2f, true);
+	}
 }
 
 void ABaseEnemy::OnProximityOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -76,11 +94,96 @@ void ABaseEnemy::Interact_Implementation(AActor* Interactor)
 {
 }
 
+void ABaseEnemy::UpdateHealthBarVisibility()
+{
+	if (AttributeComponent && !AttributeComponent->IsAlive())
+	{
+		return;
+	}
+
+	if (HealthBarWidgetComponent)
+	{
+		bool bShouldBeVisible = false;
+		APawn* PlayerPawn = UGameplayStatics::GetPlayerPawn(this, 0);
+		if (PlayerPawn)
+		{
+			float DistanceSq = FVector::DistSquared(GetActorLocation(), PlayerPawn->GetActorLocation());
+			float MaxDistanceSq = FMath::Square(MaxHealthBarDisplayDistance);
+
+			if (DistanceSq <= MaxDistanceSq)
+			{
+				bShouldBeVisible = true;
+			}
+		}
+
+		if (GetWorldTimerManager().IsTimerActive(TimerHandle_HideHealthBar))
+		{
+			bShouldBeVisible = true;
+		}
+
+		if (bShouldBeVisible)
+		{
+			if (!HealthBarWidgetComponent->IsVisible())
+			{
+				HealthBarWidgetComponent->SetVisibility(true);
+				SetActorTickEnabled(true);
+			}
+
+			UUserWidget* UserWidget = HealthBarWidgetComponent->GetUserWidgetObject();
+			if (UserWidget)
+			{
+				UEnemyHealthBarWidget* HealthBarWidget = Cast<UEnemyHealthBarWidget>(UserWidget);
+				if (HealthBarWidget)
+				{
+					HealthBarWidget->SetOwnerEnemy(this);
+				}
+			}
+		}
+		else
+		{
+			if (HealthBarWidgetComponent->IsVisible())
+			{
+				HealthBarWidgetComponent->SetVisibility(false);
+				SetActorTickEnabled(false);
+			}
+		}
+	}
+}
+
+void ABaseEnemy::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	if (HealthBarWidgetComponent && HealthBarWidgetComponent->IsVisible())
+	{
+		APlayerCameraManager* CameraManager = UGameplayStatics::GetPlayerCameraManager(this, 0);
+		if (CameraManager)
+		{
+			FRotator CameraRotation = CameraManager->GetCameraRotation();
+			FRotator TargetRotation = FRotator(-CameraRotation.Pitch, CameraRotation.Yaw + 180.0f, 0.0f);
+			HealthBarWidgetComponent->SetWorldRotation(TargetRotation);
+		}
+	}
+}
+
+void ABaseEnemy::HideHealthBar()
+{
+	UpdateHealthBarVisibility();
+}
+
 void ABaseEnemy::TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator)
 {
 	if (AttributeComponent && AttributeComponent->IsAlive())
 	{
 		AttributeComponent->ApplyHealthChange(-Damage);
+
+		if (HealthBarWidgetComponent)
+		{
+			GetWorldTimerManager().ClearTimer(TimerHandle_HideHealthBar);
+			GetWorldTimerManager().SetTimer(TimerHandle_HideHealthBar, this, &ABaseEnemy::HideHealthBar, HealthBarVisibilityDuration, false);
+
+			UpdateHealthBarVisibility();
+		}
 
 		if (DamageTextClass)
 		{
@@ -148,6 +251,13 @@ void ABaseEnemy::TakeElementalDamage_Implementation(EDragonElement Element, floa
 
 void ABaseEnemy::HandleDeath(UAttributeComponent* AttributeComp)
 {
+	if (HealthBarWidgetComponent)
+	{
+		HealthBarWidgetComponent->SetVisibility(false);
+	}
+	GetWorldTimerManager().ClearTimer(TimerHandle_HideHealthBar);
+	GetWorldTimerManager().ClearTimer(TimerHandle_DistanceCheck);
+
 	if (AAIController* AIController = Cast<AAIController>(GetController()))
 	{
 		if (UBehaviorTreeComponent* BTComp = Cast<UBehaviorTreeComponent>(AIController->GetBrainComponent()))
@@ -241,7 +351,7 @@ void ABaseEnemy::PerformMeleeStrike()
 	if (bHit && HitResult.GetActor())
 	{
 		AActor* HitActor = HitResult.GetActor();
-		if (HitActor->Implements<UGameplayInterface>())
+		if (HitActor->Implements<UGameplayInterface>() && !HitActor->IsA(ABaseEnemy::StaticClass()))
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 15.0f;
 			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
