@@ -3,6 +3,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystemComponent.h"
+#include "Knight/AdvancedCharacter.h"
 
 UStatusEffect_Slow::UStatusEffect_Slow()
 {
@@ -17,6 +18,11 @@ UStatusEffect_Slow::UStatusEffect_Slow()
 void UStatusEffect_Slow::ApplyEffect(AActor* Target, AActor* Instigator)
 {
 	Super::ApplyEffect(Target, Instigator);
+
+	if (AAdvancedCharacter* TargetCharacter = Cast<AAdvancedCharacter>(TargetActor))
+	{
+		TargetCharacter->StopSprint();
+	}
 
 	if (ACharacter* TargetCharacter = Cast<ACharacter>(TargetActor))
 	{

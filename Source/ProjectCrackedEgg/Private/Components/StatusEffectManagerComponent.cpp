@@ -20,6 +20,8 @@ void UStatusEffectManagerComponent::TickComponent(float DeltaTime, ELevelTick Ti
 		if (IsValid(Effect) && !Effect->IsExpired())
 		{
 			Effect->TickEffect(DeltaTime);
+			float RemainingRatio = Effect->Duration > 0.0f ? ((Effect->Duration - Effect->ElapsedTime) / Effect->Duration) : 0.0f;
+			OnStatusEffectTick.Broadcast(Effect->GetElementType(), RemainingRatio);
 		}
 	}
 
@@ -35,6 +37,7 @@ void UStatusEffectManagerComponent::ApplyStatusEffect(TSubclassOf<UStatusEffect>
 		if (IsValid(Existing) && Existing->GetClass() == EffectClass)
 		{
 			Existing->ResetDuration();
+			OnStatusEffectApplied.Broadcast(Existing->GetElementType(), Existing->Duration);
 			return;
 		}
 	}
@@ -44,6 +47,7 @@ void UStatusEffectManagerComponent::ApplyStatusEffect(TSubclassOf<UStatusEffect>
 	{
 		NewEffect->ApplyEffect(GetOwner(), Instigator);
 		ActiveEffects.Add(NewEffect);
+		OnStatusEffectApplied.Broadcast(NewEffect->GetElementType(), NewEffect->Duration);
 	}
 }
 
@@ -55,7 +59,9 @@ void UStatusEffectManagerComponent::RemoveExpiredEffects()
 		{
 			if (IsValid(ActiveEffects[i]))
 			{
+				EDragonElement ElementType = ActiveEffects[i]->GetElementType();
 				ActiveEffects[i]->RemoveEffect();
+				OnStatusEffectRemoved.Broadcast(ElementType);
 			}
 			ActiveEffects.RemoveAt(i);
 		}
@@ -68,7 +74,9 @@ void UStatusEffectManagerComponent::ClearAllEffects()
 	{
 		if (IsValid(Effect))
 		{
+			EDragonElement ElementType = Effect->GetElementType();
 			Effect->RemoveEffect();
+			OnStatusEffectRemoved.Broadcast(ElementType);
 		}
 	}
 	ActiveEffects.Empty();

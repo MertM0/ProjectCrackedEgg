@@ -14,6 +14,9 @@
 #include "CrackedEggGameMode.h"
 #include "Dragon/DragonCompanion.h"
 #include "UI/DamageTextActor.h"
+#include "StatusEffectManagerComponent.h"
+#include "StatusEffect.h"
+#include "StatusEffects/StatusEffect_Slow.h"
 
 AAdvancedCharacter::AAdvancedCharacter()
 {
@@ -38,6 +41,11 @@ AAdvancedCharacter::AAdvancedCharacter()
 	CameraComponent->bUsePawnControlRotation = false;
 
 	AttributeComponent = CreateDefaultSubobject<UAttributeComponent>(TEXT("AttributeComponent"));
+
+	StatusEffectManager = CreateDefaultSubobject<UStatusEffectManagerComponent>(TEXT("StatusEffectManager"));
+
+	EffectVfx = CreateDefaultSubobject<USceneComponent>(TEXT("EffectVfx"));
+	EffectVfx->SetupAttachment(RootComponent);
 
 	RollStrength = 1500.0f;
 	RollCooldown = 1.5f;
@@ -317,6 +325,11 @@ void AAdvancedCharacter::StartSprint()
 {
 	if (bIsDead) return;
 
+	if (StatusEffectManager && StatusEffectManager->HasActiveEffect(SlowEffectClass))
+	{
+		return;
+	}
+
 	if (AttributeComponent)
 	{
 		if (AttributeComponent->GetAttributeValue(EAttributeType::Stamina) > 0.0f)
@@ -335,7 +348,25 @@ void AAdvancedCharacter::StopSprint()
 {
 	if (AttributeComponent)
 	{
-		GetCharacterMovement()->MaxWalkSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed);
+		float BaseSpeed = AttributeComponent->GetAttributeValue(EAttributeType::MovementSpeed);
+
+		float Multiplier = 1.0f;
+		if (StatusEffectManager)
+		{
+			for (UStatusEffect* Effect : StatusEffectManager->GetActiveEffects())
+			{
+				if (UStatusEffect_Slow* SlowEffect = Cast<UStatusEffect_Slow>(Effect))
+				{
+					if (!SlowEffect->IsExpired())
+					{
+						Multiplier = SlowEffect->SlowMultiplier;
+						break;
+					}
+				}
+			}
+		}
+
+		GetCharacterMovement()->MaxWalkSpeed = BaseSpeed * Multiplier;
 		bIsSprinting = false;
 	}
 }
@@ -410,6 +441,21 @@ void AAdvancedCharacter::TakeElementalDamage_Implementation(EDragonElement Eleme
 			{
 				ResetCombo();
 				PlayAnimMontage(HitReactMontage);
+			}
+
+			if (StatusEffectManager && Element != EDragonElement::None)
+			{
+				switch (Element)
+				{
+					case EDragonElement::Fire:
+						StatusEffectManager->ApplyStatusEffect(BurnEffectClass, DamageInstigator);
+						break;
+					case EDragonElement::Lightning:
+						StatusEffectManager->ApplyStatusEffect(SlowEffectClass, DamageInstigator);
+						break;
+					default:
+						break;
+				}
 			}
 		}
 	}

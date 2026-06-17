@@ -3,7 +3,10 @@
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/AttributeComponent.h"
+#include "GameplayInterface.h"
 #include "EnemyHealthBarWidget.generated.h"
+
+class UStatusEffectManagerComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHealthChangedSignature, float, CurrentHealth, float, MaxHealth);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyStatusEffectChangedSignature, EDragonElement, ElementType, bool, bIsActive, float, RemainingRatio);
@@ -30,21 +33,27 @@ public:
 	float GetMaxHealth() const;
 
 protected:
-	virtual void NativeTick(const FGeometry& MyGeometry, float InDeltaTime) override;
-
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	AActor* OwnerEnemy;
 
 	UPROPERTY(BlueprintReadOnly, Category = "UI")
 	UAttributeComponent* AttributeComponent;
 
+	UPROPERTY(BlueprintReadOnly, Category = "UI")
+	UStatusEffectManagerComponent* StatusEffectManager;
+
 	UFUNCTION()
 	void OnAttributeChanged(UAttributeComponent* AttributeComp, EAttributeType AttributeType, float OldValue, float NewValue);
 
-	void UpdateHealthBar();
-	void UpdateStatusEffects();
+	UFUNCTION()
+	void HandleStatusEffectApplied(EDragonElement ElementType, float Duration);
 
-private:
-	bool bLastHasBurn = false;
-	bool bLastHasSlow = false;
+	UFUNCTION()
+	void HandleStatusEffectRemoved(EDragonElement ElementType);
+
+	UFUNCTION()
+	void HandleStatusEffectTick(EDragonElement ElementType, float RemainingRatio);
+
+	void UpdateHealthBar();
+	void InitializeStatusEffectsState();
 };

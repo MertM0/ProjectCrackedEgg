@@ -10,8 +10,21 @@ void UEnemyHealthBarWidget::SetOwnerEnemy(AActor* InOwnerEnemy)
 		return;
 	}
 
+	if (AttributeComponent)
+	{
+		AttributeComponent->OnAttributeChanged.RemoveAll(this);
+	}
+
+	if (StatusEffectManager)
+	{
+		StatusEffectManager->OnStatusEffectApplied.RemoveAll(this);
+		StatusEffectManager->OnStatusEffectRemoved.RemoveAll(this);
+		StatusEffectManager->OnStatusEffectTick.RemoveAll(this);
+	}
+
 	OwnerEnemy = InOwnerEnemy;
 	AttributeComponent = OwnerEnemy->FindComponentByClass<UAttributeComponent>();
+	StatusEffectManager = OwnerEnemy->FindComponentByClass<UStatusEffectManagerComponent>();
 
 	if (AttributeComponent)
 	{
@@ -19,9 +32,14 @@ void UEnemyHealthBarWidget::SetOwnerEnemy(AActor* InOwnerEnemy)
 		UpdateHealthBar();
 	}
 
-	bLastHasBurn = false;
-	bLastHasSlow = false;
-	UpdateStatusEffects();
+	if (StatusEffectManager)
+	{
+		StatusEffectManager->OnStatusEffectApplied.AddDynamic(this, &UEnemyHealthBarWidget::HandleStatusEffectApplied);
+		StatusEffectManager->OnStatusEffectRemoved.AddDynamic(this, &UEnemyHealthBarWidget::HandleStatusEffectRemoved);
+		StatusEffectManager->OnStatusEffectTick.AddDynamic(this, &UEnemyHealthBarWidget::HandleStatusEffectTick);
+
+		InitializeStatusEffectsState();
+	}
 }
 
 float UEnemyHealthBarWidget::GetCurrentHealth() const
@@ -32,12 +50,6 @@ float UEnemyHealthBarWidget::GetCurrentHealth() const
 float UEnemyHealthBarWidget::GetMaxHealth() const
 {
 	return AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::MaxHealth) : 0.0f;
-}
-
-void UEnemyHealthBarWidget::NativeTick(const FGeometry& MyGeometry, float InDeltaTime)
-{
-	Super::NativeTick(MyGeometry, InDeltaTime);
-	UpdateStatusEffects();
 }
 
 void UEnemyHealthBarWidget::OnAttributeChanged(UAttributeComponent* AttributeComp, EAttributeType AttributeType, float OldValue, float NewValue)
@@ -61,15 +73,24 @@ void UEnemyHealthBarWidget::UpdateHealthBar()
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void UEnemyHealthBarWidget::UpdateStatusEffects()
+void UEnemyHealthBarWidget::HandleStatusEffectApplied(EDragonElement ElementType, float Duration)
 {
-	if (!OwnerEnemy)
-	{
-		return;
-	}
+	OnStatusEffectChanged.Broadcast(ElementType, true, 1.0f);
+}
 
-	UStatusEffectManagerComponent* StatusManager = OwnerEnemy->FindComponentByClass<UStatusEffectManagerComponent>();
-	if (!StatusManager)
+void UEnemyHealthBarWidget::HandleStatusEffectRemoved(EDragonElement ElementType)
+{
+	OnStatusEffectChanged.Broadcast(ElementType, false, 0.0f);
+}
+
+void UEnemyHealthBarWidget::HandleStatusEffectTick(EDragonElement ElementType, float RemainingRatio)
+{
+	OnStatusEffectChanged.Broadcast(ElementType, true, RemainingRatio);
+}
+
+void UEnemyHealthBarWidget::InitializeStatusEffectsState()
+{
+	if (!StatusEffectManager)
 	{
 		return;
 	}
@@ -80,7 +101,7 @@ void UEnemyHealthBarWidget::UpdateStatusEffects()
 	bool bHasSlow = false;
 	float SlowRatio = 0.0f;
 
-	const TArray<UStatusEffect*>& ActiveEffects = StatusManager->GetActiveEffects();
+	const TArray<UStatusEffect*>& ActiveEffects = StatusEffectManager->GetActiveEffects();
 	for (UStatusEffect* Effect : ActiveEffects)
 	{
 		if (IsValid(Effect) && !Effect->IsExpired())
@@ -99,15 +120,6 @@ void UEnemyHealthBarWidget::UpdateStatusEffects()
 		}
 	}
 
-	if (bHasBurn || bLastHasBurn != bHasBurn)
-	{
-		OnStatusEffectChanged.Broadcast(EDragonElement::Fire, bHasBurn, BurnRatio);
-		bLastHasBurn = bHasBurn;
-	}
-
-	if (bHasSlow || bLastHasSlow != bHasSlow)
-	{
-		OnStatusEffectChanged.Broadcast(EDragonElement::Lightning, bHasSlow, SlowRatio);
-		bLastHasSlow = bHasSlow;
-	}
+	OnStatusEffectChanged.Broadcast(EDragonElement::Fire, bHasBurn, BurnRatio);
+	OnStatusEffectChanged.Broadcast(EDragonElement::Lightning, bHasSlow, SlowRatio);
 }

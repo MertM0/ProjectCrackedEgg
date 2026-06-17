@@ -12,6 +12,8 @@ class UInputMappingContext;
 class UInputAction;
 class UCameraComponent;
 class USpringArmComponent;
+class UStatusEffectManagerComponent;
+class UStatusEffect;
 
 UCLASS()
 class PROJECTCRACKEDEGG_API AAdvancedCharacter : public ACharacter, public IGameplayInterface
@@ -55,8 +57,10 @@ protected:
 	void Look(const FInputActionValue& Value);
 	void LightAttack();
 	void HeavyAttack();
+public:
 	void StartSprint();
 	void StopSprint();
+protected:
 
 	virtual void Jump() override;
 
@@ -142,6 +146,12 @@ protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UCameraComponent* CameraComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UStatusEffectManagerComponent* StatusEffectManager;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	USceneComponent* EffectVfx;
+
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Movement")
 	float RollStrength;
 
@@ -212,4 +222,10 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UI")
 	TSubclassOf<class ADamageTextActor> DamageTextClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	TSubclassOf<UStatusEffect> BurnEffectClass;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
+	TSubclassOf<UStatusEffect> SlowEffectClass;
 };
