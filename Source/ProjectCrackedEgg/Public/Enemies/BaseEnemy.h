@@ -92,7 +92,7 @@ public:
 
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
-	virtual void TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* Instigator) override;
+	virtual void TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* Instigator) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformMeleeStrike();

@@ -7,7 +7,7 @@
 
 UStatusEffect_Slow::UStatusEffect_Slow()
 {
-	ElementType = EDragonElement::Lightning;
+	ElementType = EElementalType::Lightning;
 	Duration = 3.0f;
 	SlowMultiplier = 0.5f;
 	OriginalSpeed = 0.0f;

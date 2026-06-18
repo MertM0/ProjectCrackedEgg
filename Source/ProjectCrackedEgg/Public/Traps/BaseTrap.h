@@ -29,7 +29,7 @@ public:
 	float BaseDamage;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trap|Settings")
-	EDragonElement TrapElement;
+	EElementalType TrapElement;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Trap|Settings")
 	float DamageCooldown;

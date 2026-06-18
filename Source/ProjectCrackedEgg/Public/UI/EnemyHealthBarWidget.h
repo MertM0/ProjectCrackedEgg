@@ -9,7 +9,7 @@
 class UStatusEffectManagerComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnEnemyHealthChangedSignature, float, CurrentHealth, float, MaxHealth);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyStatusEffectChangedSignature, EDragonElement, ElementType, bool, bIsActive, float, RemainingRatio);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnEnemyStatusEffectChangedSignature, EElementalType, ElementType, bool, bIsActive, float, RemainingRatio);
 
 UCLASS()
 class PROJECTCRACKEDEGG_API UEnemyHealthBarWidget : public UUserWidget
@@ -46,13 +46,13 @@ protected:
 	void OnAttributeChanged(UAttributeComponent* AttributeComp, EAttributeType AttributeType, float OldValue, float NewValue);
 
 	UFUNCTION()
-	void HandleStatusEffectApplied(EDragonElement ElementType, float Duration);
+	void HandleStatusEffectApplied(EElementalType ElementType, float Duration);
 
 	UFUNCTION()
-	void HandleStatusEffectRemoved(EDragonElement ElementType);
+	void HandleStatusEffectRemoved(EElementalType ElementType);
 
 	UFUNCTION()
-	void HandleStatusEffectTick(EDragonElement ElementType, float RemainingRatio);
+	void HandleStatusEffectTick(EElementalType ElementType, float RemainingRatio);
 
 	void UpdateHealthBar();
 	void InitializeStatusEffectsState();

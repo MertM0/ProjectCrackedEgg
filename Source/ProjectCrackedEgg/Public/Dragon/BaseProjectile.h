@@ -34,7 +34,7 @@ protected:
 	float ProjectileDamage;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Projectile")
-	EDragonElement ProjectileElement;
+	EElementalType ProjectileElement;
 
 	UPROPERTY()
 	AActor* ProjectileInstigator;
@@ -55,7 +55,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "Projectile")
-	void InitializeProjectile(EDragonElement Element, float Damage, AActor* InInstigator, AActor* InTarget = nullptr);
+	void InitializeProjectile(EElementalType Element, float Damage, AActor* InInstigator, AActor* InTarget = nullptr);
 
 	float GetMovementDelay() const { return MovementDelay; }
 

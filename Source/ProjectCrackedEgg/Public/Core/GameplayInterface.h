@@ -5,7 +5,7 @@
 #include "GameplayInterface.generated.h"
 
 UENUM(BlueprintType)
-enum class EDragonElement : uint8
+enum class EElementalType : uint8
 {
 	None		UMETA(DisplayName = "None"),
 	Fire		UMETA(DisplayName = "Fire"),
@@ -28,5 +28,5 @@ public:
 	void Interact(AActor* Interactor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Damage")
-	void TakeElementalDamage(EDragonElement Element, float Damage, AActor* DamageInstigator);
+	void TakeElementalDamage(EElementalType Element, float Damage, AActor* DamageInstigator);
 };

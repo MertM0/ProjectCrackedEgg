@@ -23,14 +23,14 @@ void ADragonEgg::Interact_Implementation(AActor* Interactor)
 {
 }
 
-void ADragonEgg::FinishHatching(EDragonElement SelectedElement)
+void ADragonEgg::FinishHatching(EElementalType SelectedElement)
 {
 	TSubclassOf<ADragonCompanion> ClassToSpawn = nullptr;
-	if (SelectedElement == EDragonElement::Fire)
+	if (SelectedElement == EElementalType::Fire)
 	{
 		ClassToSpawn = FireDragonCompanionClass;
 	}
-	else if (SelectedElement == EDragonElement::Lightning)
+	else if (SelectedElement == EElementalType::Lightning)
 	{
 		ClassToSpawn = LightningDragonCompanionClass;
 	}

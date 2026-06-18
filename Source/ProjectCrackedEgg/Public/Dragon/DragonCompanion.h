@@ -31,7 +31,7 @@ protected:
 	AActor* TargetPlayer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	EDragonElement DragonElement;
+	EElementalType DragonElement;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	TArray<UAnimMontage*> GroundMeleeMontages;
@@ -116,7 +116,7 @@ public:
 	void SpawnProjectile(AActor* Target);
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
-	void SetDragonElement(EDragonElement NewElement);
+	void SetDragonElement(EElementalType NewElement);
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Progression")
 	class UParticleSystem* LevelUpVFX;

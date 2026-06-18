@@ -412,7 +412,7 @@ void AAdvancedCharacter::ResetRoll()
 	bCanRoll = true;
 }
 
-void AAdvancedCharacter::TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator)
+void AAdvancedCharacter::TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator)
 {
 	if (bIsDead) return;
 
@@ -443,14 +443,14 @@ void AAdvancedCharacter::TakeElementalDamage_Implementation(EDragonElement Eleme
 				PlayAnimMontage(HitReactMontage);
 			}
 
-			if (StatusEffectManager && Element != EDragonElement::None)
+			if (StatusEffectManager && Element != EElementalType::None)
 			{
 				switch (Element)
 				{
-					case EDragonElement::Fire:
+					case EElementalType::Fire:
 						StatusEffectManager->ApplyStatusEffect(BurnEffectClass, DamageInstigator);
 						break;
-					case EDragonElement::Lightning:
+					case EElementalType::Lightning:
 						StatusEffectManager->ApplyStatusEffect(SlowEffectClass, DamageInstigator);
 						break;
 					default:
@@ -544,7 +544,7 @@ void AAdvancedCharacter::PerformWeaponSweep()
 		if (HitActor->Implements<UGameplayInterface>())
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 10.0f;
-			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 		}
 	}
 }
@@ -578,7 +578,7 @@ void AAdvancedCharacter::PerformHeavySweep()
 				LastAttackedEnemy = HitActor;
 				
 				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier) : 15.0f;
-				IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
+				IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 			}
 		}
 	}

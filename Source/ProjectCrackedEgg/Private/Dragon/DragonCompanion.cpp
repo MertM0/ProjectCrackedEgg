@@ -18,7 +18,7 @@ ADragonCompanion::ADragonCompanion()
 
 	AttributeComponent = CreateDefaultSubobject<UAttributeComponent>(TEXT("AttributeComponent"));
 
-	DragonElement = EDragonElement::Fire;
+	DragonElement = EElementalType::Fire;
 	AirRangedMontage = nullptr;
 	ProjectileClass = nullptr;
 
@@ -383,7 +383,7 @@ void ADragonCompanion::PerformMeleeAttack()
 		if (HitActor != TargetPlayer && HitActor->Implements<UGameplayInterface>())
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 15.0f;
-			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 		}
 	}
 }
@@ -431,7 +431,7 @@ void ADragonCompanion::HandleLevelUp(UAttributeComponent* AttributeComp, int32 N
 	}
 }
 
-void ADragonCompanion::SetDragonElement(EDragonElement NewElement)
+void ADragonCompanion::SetDragonElement(EElementalType NewElement)
 {
 	DragonElement = NewElement;
 }

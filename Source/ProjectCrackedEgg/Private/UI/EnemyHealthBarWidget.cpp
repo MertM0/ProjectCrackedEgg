@@ -73,17 +73,17 @@ void UEnemyHealthBarWidget::UpdateHealthBar()
 	OnHealthChanged.Broadcast(CurrentHealth, MaxHealth);
 }
 
-void UEnemyHealthBarWidget::HandleStatusEffectApplied(EDragonElement ElementType, float Duration)
+void UEnemyHealthBarWidget::HandleStatusEffectApplied(EElementalType ElementType, float Duration)
 {
 	OnStatusEffectChanged.Broadcast(ElementType, true, 1.0f);
 }
 
-void UEnemyHealthBarWidget::HandleStatusEffectRemoved(EDragonElement ElementType)
+void UEnemyHealthBarWidget::HandleStatusEffectRemoved(EElementalType ElementType)
 {
 	OnStatusEffectChanged.Broadcast(ElementType, false, 0.0f);
 }
 
-void UEnemyHealthBarWidget::HandleStatusEffectTick(EDragonElement ElementType, float RemainingRatio)
+void UEnemyHealthBarWidget::HandleStatusEffectTick(EElementalType ElementType, float RemainingRatio)
 {
 	OnStatusEffectChanged.Broadcast(ElementType, true, RemainingRatio);
 }
@@ -107,12 +107,12 @@ void UEnemyHealthBarWidget::InitializeStatusEffectsState()
 		if (IsValid(Effect) && !Effect->IsExpired())
 		{
 			float RemainingRatio = Effect->Duration > 0.0f ? ((Effect->Duration - Effect->ElapsedTime) / Effect->Duration) : 0.0f;
-			if (Effect->ElementType == EDragonElement::Fire)
+			if (Effect->ElementType == EElementalType::Fire)
 			{
 				bHasBurn = true;
 				BurnRatio = RemainingRatio;
 			}
-			else if (Effect->ElementType == EDragonElement::Lightning)
+			else if (Effect->ElementType == EElementalType::Lightning)
 			{
 				bHasSlow = true;
 				SlowRatio = RemainingRatio;
@@ -120,6 +120,6 @@ void UEnemyHealthBarWidget::InitializeStatusEffectsState()
 		}
 	}
 
-	OnStatusEffectChanged.Broadcast(EDragonElement::Fire, bHasBurn, BurnRatio);
-	OnStatusEffectChanged.Broadcast(EDragonElement::Lightning, bHasSlow, SlowRatio);
+	OnStatusEffectChanged.Broadcast(EElementalType::Fire, bHasBurn, BurnRatio);
+	OnStatusEffectChanged.Broadcast(EElementalType::Lightning, bHasSlow, SlowRatio);
 }

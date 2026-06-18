@@ -44,5 +44,5 @@ public:
 	virtual void Interact_Implementation(AActor* Interactor) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Hatching")
-	void FinishHatching(EDragonElement SelectedElement);
+	void FinishHatching(EElementalType SelectedElement);
 };

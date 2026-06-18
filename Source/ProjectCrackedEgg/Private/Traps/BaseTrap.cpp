@@ -17,7 +17,7 @@ ABaseTrap::ABaseTrap()
 	TriggerVolume->SetCollisionProfileName(TEXT("Trigger"));
 
 	BaseDamage = 20.0f;
-	TrapElement = EDragonElement::None;
+	TrapElement = EElementalType::None;
 	DamageCooldown = 1.0f;
 	bAffectsEnemies = false;
 }

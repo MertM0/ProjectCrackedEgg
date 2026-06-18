@@ -5,7 +5,7 @@
 
 UStatusEffect_Burn::UStatusEffect_Burn()
 {
-	ElementType = EDragonElement::Fire;
+	ElementType = EElementalType::Fire;
 	Duration = 4.0f;
 	DamagePerTick = 3.0f;
 	TickInterval = 0.5f;
@@ -48,7 +48,7 @@ void UStatusEffect_Burn::TickEffect(float DeltaTime)
 
 		if (IsValid(TargetActor) && TargetActor->Implements<UGameplayInterface>())
 		{
-			IGameplayInterface::Execute_TakeElementalDamage(TargetActor, EDragonElement::None, DamagePerTick, InstigatorActor);
+			IGameplayInterface::Execute_TakeElementalDamage(TargetActor, EElementalType::None, DamagePerTick, InstigatorActor);
 		}
 	}
 }

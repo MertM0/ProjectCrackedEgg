@@ -2,7 +2,7 @@
 
 UStatusEffect::UStatusEffect()
 {
-	ElementType = EDragonElement::None;
+	ElementType = EElementalType::None;
 	Duration = 5.0f;
 	ElapsedTime = 0.0f;
 	TargetActor = nullptr;

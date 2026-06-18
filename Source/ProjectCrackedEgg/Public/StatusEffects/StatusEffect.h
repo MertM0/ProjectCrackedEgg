@@ -12,7 +12,7 @@ class PROJECTCRACKEDEGG_API UStatusEffect : public UObject
 
 public:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status Effect")
-	EDragonElement ElementType;
+	EElementalType ElementType;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Status Effect")
 	float Duration;
@@ -35,7 +35,7 @@ public:
 	bool IsExpired() const;
 
 	UFUNCTION(BlueprintPure, Category = "Status Effect")
-	EDragonElement GetElementType() const { return ElementType; }
+	EElementalType GetElementType() const { return ElementType; }
 
 	void ResetDuration();
 };

@@ -7,9 +7,9 @@
 
 class UStatusEffect;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatusEffectApplied, EDragonElement, ElementType, float, Duration);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusEffectRemoved, EDragonElement, ElementType);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatusEffectTick, EDragonElement, ElementType, float, RemainingRatio);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatusEffectApplied, EElementalType, ElementType, float, Duration);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnStatusEffectRemoved, EElementalType, ElementType);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnStatusEffectTick, EElementalType, ElementType, float, RemainingRatio);
 
 UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class PROJECTCRACKEDEGG_API UStatusEffectManagerComponent : public UActorComponent

@@ -93,7 +93,7 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Combat")
 	void PlayHeavyAttackMontage();
 
-	virtual void TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator) override;
+	virtual void TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Combat")
 	void PerformWeaponSweep();

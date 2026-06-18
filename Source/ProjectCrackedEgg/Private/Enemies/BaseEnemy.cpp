@@ -171,7 +171,7 @@ void ABaseEnemy::HideHealthBar()
 	UpdateHealthBarVisibility();
 }
 
-void ABaseEnemy::TakeElementalDamage_Implementation(EDragonElement Element, float Damage, AActor* DamageInstigator)
+void ABaseEnemy::TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator)
 {
 	if (AttributeComponent && AttributeComponent->IsAlive())
 	{
@@ -231,14 +231,14 @@ void ABaseEnemy::TakeElementalDamage_Implementation(EDragonElement Element, floa
 				PlayAnimMontage(HitReactMontage);
 			}
 
-			if (StatusEffectManager && Element != EDragonElement::None)
+			if (StatusEffectManager && Element != EElementalType::None)
 			{
 				switch (Element)
 				{
-					case EDragonElement::Fire:
+					case EElementalType::Fire:
 						StatusEffectManager->ApplyStatusEffect(BurnEffectClass, DamageInstigator);
 						break;
-					case EDragonElement::Lightning:
+					case EElementalType::Lightning:
 						StatusEffectManager->ApplyStatusEffect(SlowEffectClass, DamageInstigator);
 						break;
 					default:
@@ -354,7 +354,7 @@ void ABaseEnemy::PerformMeleeStrike()
 		if (HitActor->Implements<UGameplayInterface>() && !HitActor->IsA(ABaseEnemy::StaticClass()))
 		{
 			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 15.0f;
-			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EDragonElement::None, Damage, this);
+			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 		}
 	}
 }

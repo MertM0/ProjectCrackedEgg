@@ -4,6 +4,7 @@
 #include "GameplayInterface.h"
 #include "AdvancedCharacter.h"
 #include "DragonCompanion.h"
+#include "Enemies/BaseEnemy.h"
 
 ABaseProjectile::ABaseProjectile()
 {
@@ -25,7 +26,7 @@ ABaseProjectile::ABaseProjectile()
 
 	ProjectileSpeed = 2000.0f;
 	ProjectileDamage = 15.0f;
-	ProjectileElement = EDragonElement::None;
+	ProjectileElement = EElementalType::None;
 	ProjectileInstigator = nullptr;
 	LifeSpan = 5.0f;
 
@@ -71,7 +72,7 @@ void ABaseProjectile::Tick(float DeltaTime)
 	}
 }
 
-void ABaseProjectile::InitializeProjectile(EDragonElement Element, float Damage, AActor* InInstigator, AActor* InTarget)
+void ABaseProjectile::InitializeProjectile(EElementalType Element, float Damage, AActor* InInstigator, AActor* InTarget)
 {
 	ProjectileElement = Element;
 	ProjectileDamage = Damage;
@@ -160,6 +161,19 @@ void ABaseProjectile::ProcessImpact(AActor* OtherActor)
 		bool bTargetFriendly = OtherActor->IsA(AAdvancedCharacter::StaticClass()) || OtherActor->IsA(ADragonCompanion::StaticClass());
 
 		if (bInstigatorFriendly && bTargetFriendly)
+		{
+			return;
+		}
+
+		bool bInstigatorEnemy = false;
+		if (ProjectileInstigator)
+		{
+			bInstigatorEnemy = ProjectileInstigator->IsA(ABaseEnemy::StaticClass());
+		}
+
+		bool bTargetEnemy = OtherActor->IsA(ABaseEnemy::StaticClass());
+
+		if (bInstigatorEnemy && bTargetEnemy)
 		{
 			return;
 		}

@@ -59,7 +59,7 @@ void UStatusEffectManagerComponent::RemoveExpiredEffects()
 		{
 			if (IsValid(ActiveEffects[i]))
 			{
-				EDragonElement ElementType = ActiveEffects[i]->GetElementType();
+				EElementalType ElementType = ActiveEffects[i]->GetElementType();
 				ActiveEffects[i]->RemoveEffect();
 				OnStatusEffectRemoved.Broadcast(ElementType);
 			}
@@ -74,7 +74,7 @@ void UStatusEffectManagerComponent::ClearAllEffects()
 	{
 		if (IsValid(Effect))
 		{
-			EDragonElement ElementType = Effect->GetElementType();
+			EElementalType ElementType = Effect->GetElementType();
 			Effect->RemoveEffect();
 			OnStatusEffectRemoved.Broadcast(ElementType);
 		}
