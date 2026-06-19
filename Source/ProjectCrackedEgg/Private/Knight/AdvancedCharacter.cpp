@@ -73,6 +73,9 @@ AAdvancedCharacter::AAdvancedCharacter()
 	StaminaRegenRate = 20.0f;
 	StaminaRegenDelay = 1.5f;
 	StaminaRegenTimer = 0.0f;
+
+	DamageModifier = 1.0f;
+	StaminaCostModifier = 1.0f;
 }
 
 void AAdvancedCharacter::BeginPlay()
@@ -103,7 +106,7 @@ void AAdvancedCharacter::Tick(float DeltaTime)
 	{
 		if (bIsSprinting && GetVelocity().SizeSquared2D() > 0.0f)
 		{
-			float Drain = SprintStaminaDrainRate * DeltaTime;
+			float Drain = SprintStaminaDrainRate * StaminaCostModifier * DeltaTime;
 			AttributeComponent->ApplyStaminaChange(-Drain);
 			StaminaRegenTimer = StaminaRegenDelay;
 
@@ -186,10 +189,10 @@ void AAdvancedCharacter::Jump()
 
 	if (CanJump())
 	{
-		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) >= JumpStaminaCost)
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) >= JumpStaminaCost * StaminaCostModifier)
 		{
 			Super::Jump();
-			AttributeComponent->ApplyStaminaChange(-JumpStaminaCost);
+			AttributeComponent->ApplyStaminaChange(-JumpStaminaCost * StaminaCostModifier);
 			StaminaRegenTimer = StaminaRegenDelay;
 		}
 		else
@@ -207,12 +210,12 @@ void AAdvancedCharacter::LightAttack()
 	{
 		if (bComboWindowOpen)
 		{
-			if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+			if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost * StaminaCostModifier)
 			{
 				OnStaminaExhaustedAction.Broadcast();
 				return;
 			}
-			AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+			AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost * StaminaCostModifier);
 			StaminaRegenTimer = StaminaRegenDelay;
 
 			bComboWindowOpen = false;
@@ -230,12 +233,12 @@ void AAdvancedCharacter::LightAttack()
 	}
 	else
 	{
-		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost * StaminaCostModifier)
 		{
 			OnStaminaExhaustedAction.Broadcast();
 			return;
 		}
-		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost * StaminaCostModifier);
 		StaminaRegenTimer = StaminaRegenDelay;
 
 		bIsAttacking = true;
@@ -250,12 +253,12 @@ void AAdvancedCharacter::HeavyAttack()
 
 	if (!bIsAttacking)
 	{
-		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < HeavyAttackStaminaCost)
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < HeavyAttackStaminaCost * StaminaCostModifier)
 		{
 			OnStaminaExhaustedAction.Broadcast();
 			return;
 		}
-		AttributeComponent->ApplyStaminaChange(-HeavyAttackStaminaCost);
+		AttributeComponent->ApplyStaminaChange(-HeavyAttackStaminaCost * StaminaCostModifier);
 		StaminaRegenTimer = StaminaRegenDelay;
 
 		bIsAttacking = true;
@@ -275,13 +278,13 @@ void AAdvancedCharacter::SaveCombo()
 	{
 		bSaveAttack = false;
 
-		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost)
+		if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < LightAttackStaminaCost * StaminaCostModifier)
 		{
 			OnStaminaExhaustedAction.Broadcast();
 			ResetCombo();
 			return;
 		}
-		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost);
+		AttributeComponent->ApplyStaminaChange(-LightAttackStaminaCost * StaminaCostModifier);
 		StaminaRegenTimer = StaminaRegenDelay;
 
 		ComboIndex++;
@@ -378,13 +381,13 @@ void AAdvancedCharacter::ExecuteRoll()
 		return;
 	}
 
-	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < RollStaminaCost)
+	if (AttributeComponent && AttributeComponent->GetAttributeValue(EAttributeType::Stamina) < RollStaminaCost * StaminaCostModifier)
 	{
 		OnStaminaExhaustedAction.Broadcast();
 		return;
 	}
 
-	AttributeComponent->ApplyStaminaChange(-RollStaminaCost);
+	AttributeComponent->ApplyStaminaChange(-RollStaminaCost * StaminaCostModifier);
 	StaminaRegenTimer = StaminaRegenDelay;
 
 	FVector LaunchDirection;
@@ -543,7 +546,7 @@ void AAdvancedCharacter::PerformWeaponSweep()
 		
 		if (HitActor->Implements<UGameplayInterface>())
 		{
-			float Damage = AttributeComponent ? AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) : 10.0f;
+			float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * DamageModifier) : (10.0f * DamageModifier);
 			IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 		}
 	}
@@ -577,7 +580,7 @@ void AAdvancedCharacter::PerformHeavySweep()
 				HitActorsDuringAttack.Add(HitActor);
 				LastAttackedEnemy = HitActor;
 				
-				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier) : 15.0f;
+				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier * DamageModifier) : (15.0f * DamageModifier);
 				IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 			}
 		}
@@ -651,3 +654,36 @@ void AAdvancedCharacter::HandleLevelUp(UAttributeComponent* AttributeComp, int32
 		UGameplayStatics::SpawnEmitterAttached(LevelUpVFX, GetMesh(), NAME_None, FVector::ZeroVector, FRotator::ZeroRotator, EAttachLocation::KeepRelativeOffset, true);
 	}
 }
+
+void AAdvancedCharacter::AddKey(FName KeyID)
+{
+	CollectedKeys.Add(KeyID);
+}
+
+bool AAdvancedCharacter::HasKey(FName KeyID) const
+{
+	return CollectedKeys.Contains(KeyID);
+}
+
+void AAdvancedCharacter::ApplyDamageBoost(float Multiplier, float Duration)
+{
+	DamageModifier = Multiplier;
+	GetWorldTimerManager().SetTimer(TimerHandle_DamageBoost, this, &AAdvancedCharacter::ResetDamageBoost, Duration, false);
+}
+
+void AAdvancedCharacter::ApplyStaminaCostReduction(float Multiplier, float Duration)
+{
+	StaminaCostModifier = Multiplier;
+	GetWorldTimerManager().SetTimer(TimerHandle_StaminaReduction, this, &AAdvancedCharacter::ResetStaminaCostReduction, Duration, false);
+}
+
+void AAdvancedCharacter::ResetDamageBoost()
+{
+	DamageModifier = 1.0f;
+}
+
+void AAdvancedCharacter::ResetStaminaCostReduction()
+{
+	StaminaCostModifier = 1.0f;
+}
+

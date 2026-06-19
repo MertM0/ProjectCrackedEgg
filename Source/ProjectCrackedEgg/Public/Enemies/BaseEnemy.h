@@ -5,6 +5,7 @@
 #include "GameplayInterface.h"
 #include "BaseEnemy.generated.h"
 
+class ABasePickup;
 class UAttributeComponent;
 class UStatusEffectManagerComponent;
 class UWidgetComponent;
@@ -86,6 +87,15 @@ protected:
 	void HideHealthBar();
 
 	void UpdateHealthBarVisibility();
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loot")
+	class UDataTable* LootTable;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loot")
+	FVector LootSpawnOffset;
+
+	UFUNCTION(BlueprintCallable, Category = "Loot")
+	void SpawnLootDrops();
 
 public:	
 	virtual void Tick(float DeltaTime) override;

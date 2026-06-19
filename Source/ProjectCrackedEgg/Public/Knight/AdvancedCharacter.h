@@ -228,4 +228,40 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Combat")
 	TSubclassOf<UStatusEffect> SlowEffectClass;
+
+protected:
+	UPROPERTY(BlueprintReadOnly, Category = "Inventory")
+	TSet<FName> CollectedKeys;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Buffs")
+	float DamageModifier;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Buffs")
+	float StaminaCostModifier;
+
+	FTimerHandle TimerHandle_DamageBoost;
+	FTimerHandle TimerHandle_StaminaReduction;
+
+public:
+	UFUNCTION(BlueprintCallable, Category = "Inventory")
+	void AddKey(FName KeyID);
+
+	UFUNCTION(BlueprintPure, Category = "Inventory")
+	bool HasKey(FName KeyID) const;
+
+	UFUNCTION(BlueprintCallable, Category = "Buffs")
+	void ApplyDamageBoost(float Multiplier, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Buffs")
+	void ApplyStaminaCostReduction(float Multiplier, float Duration);
+
+	UFUNCTION(BlueprintCallable, Category = "Buffs")
+	void ResetDamageBoost();
+
+	UFUNCTION(BlueprintCallable, Category = "Buffs")
+	void ResetStaminaCostReduction();
+
+	UFUNCTION(BlueprintImplementableEvent, Category = "Interaction")
+	void ShowInteractionWarning(const FString& WarningMessage);
 };
+

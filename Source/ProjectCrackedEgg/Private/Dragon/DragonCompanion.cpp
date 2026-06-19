@@ -48,6 +48,9 @@ ADragonCompanion::ADragonCompanion()
 
 	AIC = nullptr;
 	CurrentMoveTarget = nullptr;
+
+	CommandTarget = nullptr;
+	bHasCommandTarget = false;
 }
 
 void ADragonCompanion::BeginPlay()
@@ -148,6 +151,12 @@ void ADragonCompanion::UpdateAI()
 
 	if (IsPlayingAttackMontage())
 	{
+		return;
+	}
+
+	if (bHasCommandTarget)
+	{
+		UpdateCommandBehavior();
 		return;
 	}
 
@@ -434,4 +443,65 @@ void ADragonCompanion::HandleLevelUp(UAttributeComponent* AttributeComp, int32 N
 void ADragonCompanion::SetDragonElement(EElementalType NewElement)
 {
 	DragonElement = NewElement;
+}
+
+void ADragonCompanion::CommandFireAtTarget(AActor* Target)
+{
+	if (Target)
+	{
+		CommandTarget = Target;
+		bHasCommandTarget = true;
+
+		if (AIC)
+		{
+			AIC->StopMovement();
+		}
+		CurrentMoveTarget = nullptr;
+
+		UpdateCommandBehavior();
+	}
+}
+
+void ADragonCompanion::UpdateCommandBehavior()
+{
+	if (!IsValid(CommandTarget))
+	{
+		bHasCommandTarget = false;
+		CommandTarget = nullptr;
+		return;
+	}
+
+	float DistanceToCmd = FVector::Dist(GetActorLocation(), CommandTarget->GetActorLocation());
+	if (DistanceToCmd > RangedAttackDistance)
+	{
+		bIsFlying = true;
+		if (AIC && (AIC->GetMoveStatus() == EPathFollowingStatus::Idle || CurrentMoveTarget != CommandTarget))
+		{
+			AIC->MoveToActor(CommandTarget, RangedAttackDistance - 100.0f, false, true, true, 0, true);
+			CurrentMoveTarget = CommandTarget;
+		}
+	}
+	else
+	{
+		if (AIC)
+		{
+			AIC->StopMovement();
+		}
+		CurrentMoveTarget = nullptr;
+
+		FRotator TargetRotation = (CommandTarget->GetActorLocation() - GetActorLocation()).Rotation();
+		TargetRotation.Pitch = 0.0f;
+		TargetRotation.Roll = 0.0f;
+		SetActorRotation(TargetRotation);
+
+		if (AirRangedMontage)
+		{
+			PlayAnimMontage(AirRangedMontage);
+		}
+
+		SpawnProjectile(CommandTarget);
+
+		bHasCommandTarget = false;
+		CommandTarget = nullptr;
+	}
 }

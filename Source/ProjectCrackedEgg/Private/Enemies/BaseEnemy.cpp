@@ -1,5 +1,6 @@
 #include "BaseEnemy.h"
 #include "AttributeComponent.h"
+#include "Interactables/BasePickup.h"
 #include "AdvancedCharacter.h"
 #include "DragonCompanion.h"
 #include "Kismet/GameplayStatics.h"
@@ -46,6 +47,9 @@ ABaseEnemy::ABaseEnemy()
 	bHideHealthBarWhenFullHealth = true;
 	HealthBarVisibilityDuration = 5.0f;
 	MaxHealthBarDisplayDistance = 1500.0f;
+
+	LootSpawnOffset = FVector(0.0f, 0.0f, 0.0f);
+	LootTable = nullptr;
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
@@ -297,6 +301,8 @@ void ABaseEnemy::HandleDeath(UAttributeComponent* AttributeComp)
 		}
 	}
 
+	SpawnLootDrops();
+
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetCharacterMovement()->DisableMovement();
 
@@ -358,3 +364,47 @@ void ABaseEnemy::PerformMeleeStrike()
 		}
 	}
 }
+
+void ABaseEnemy::SpawnLootDrops()
+{
+	if (LootTable)
+	{
+		TArray<FLootRow*> Rows;
+		LootTable->GetAllRows<FLootRow>(TEXT(""), Rows);
+
+		float TotalWeight = 0.0f;
+		for (const FLootRow* Row : Rows)
+		{
+			if (Row)
+			{
+				TotalWeight += Row->Weight;
+			}
+		}
+
+		if (TotalWeight > 0.0f)
+		{
+			float RandomRoll = FMath::FRandRange(0.0f, TotalWeight);
+			float CurrentWeightSum = 0.0f;
+
+			for (const FLootRow* Row : Rows)
+			{
+				if (Row)
+				{
+					CurrentWeightSum += Row->Weight;
+					if (RandomRoll <= CurrentWeightSum)
+					{
+						if (Row->PickupClass)
+						{
+							FVector SpawnLoc = GetActorLocation() + LootSpawnOffset;
+							FActorSpawnParameters SpawnParams;
+							SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+							GetWorld()->SpawnActor<AActor>(Row->PickupClass, SpawnLoc, FRotator::ZeroRotator, SpawnParams);
+						}
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
