@@ -31,6 +31,8 @@ class PROJECTCRACKEDEGG_API ABasePickup : public ABaseInteractable
 public:
 	ABasePickup();
 
+	void SetCollectionDelay(float InDelay) { CollectionDelay = InDelay; }
+
 protected:
 	virtual void BeginPlay() override;
 

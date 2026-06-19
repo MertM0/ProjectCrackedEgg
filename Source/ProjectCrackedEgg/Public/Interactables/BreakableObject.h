@@ -5,8 +5,8 @@
 #include "BreakableObject.generated.h"
 
 class ABasePickup;
-class UParticleSystem;
 class USoundBase;
+class UNiagaraSystem;
 
 UCLASS()
 class PROJECTCRACKEDEGG_API ABreakableObject : public ABaseInteractable
@@ -17,19 +17,27 @@ public:
 	ABreakableObject();
 
 protected:
-	virtual void BeginPlay() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
-	float MaxHealth;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Breakable Settings")
-	float CurrentHealth;
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
 	class UDataTable* LootTable;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
+	float LootCollectionDelay;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
+	bool bOnlyBreakableByDragon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
+	bool bOnlyBreakableByPlayer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Settings")
+	float BreakDelay;
+
+	FTimerHandle TimerHandle_BreakDelay;
+
+	void StartBreakSequence();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Effects")
-	UParticleSystem* DestroyVFX;
+	UNiagaraSystem* DestroyVFX;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Breakable Effects")
 	USoundBase* DestroySound;
@@ -40,6 +48,11 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent, Category = "Breakable Events")
 	void OnObjectBroken();
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "Breakable Events")
+	void OnBreakStarted();
+
 public:
+	virtual void Interact_Implementation(AActor* Interactor) override;
+
 	virtual void TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator) override;
 };

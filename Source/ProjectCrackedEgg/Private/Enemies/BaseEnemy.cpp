@@ -50,6 +50,7 @@ ABaseEnemy::ABaseEnemy()
 
 	LootSpawnOffset = FVector(0.0f, 0.0f, 0.0f);
 	LootTable = nullptr;
+	LootCollectionDelay = 0.5f;
 
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 
@@ -396,9 +397,19 @@ void ABaseEnemy::SpawnLootDrops()
 						if (Row->PickupClass)
 						{
 							FVector SpawnLoc = GetActorLocation() + LootSpawnOffset;
-							FActorSpawnParameters SpawnParams;
-							SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-							GetWorld()->SpawnActor<AActor>(Row->PickupClass, SpawnLoc, FRotator::ZeroRotator, SpawnParams);
+							FTransform SpawnTransform(FRotator::ZeroRotator, SpawnLoc);
+							ABasePickup* NewPickup = GetWorld()->SpawnActorDeferred<ABasePickup>(
+								Row->PickupClass,
+								SpawnTransform,
+								nullptr,
+								nullptr,
+								ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+							);
+							if (NewPickup)
+							{
+								NewPickup->SetCollectionDelay(LootCollectionDelay);
+								NewPickup->FinishSpawning(SpawnTransform);
+							}
 						}
 						break;
 					}

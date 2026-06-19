@@ -9,7 +9,7 @@ public class ProjectCrackedEgg : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "AIModule", "NavigationSystem", "UMG", "GameplayTasks" });
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "AIModule", "NavigationSystem", "UMG", "GameplayTasks", "Niagara" });
 
 		PublicIncludePaths.AddRange(new string[] {
 			Path.Combine(ModuleDirectory, "Public"),

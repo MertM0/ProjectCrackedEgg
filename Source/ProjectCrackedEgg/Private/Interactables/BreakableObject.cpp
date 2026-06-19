@@ -1,31 +1,67 @@
 #include "Interactables/BreakableObject.h"
 #include "Interactables/BasePickup.h"
 #include "Kismet/GameplayStatics.h"
+#include "NiagaraFunctionLibrary.h"
+#include "Dragon/DragonCompanion.h"
+#include "Knight/AdvancedCharacter.h"
 
 ABreakableObject::ABreakableObject()
 {
 	PrimaryActorTick.bCanEverTick = false;
-	MaxHealth = 30.0f;
-	CurrentHealth = 30.0f;
 	LootTable = nullptr;
+	LootCollectionDelay = 0.5f;
+	bOnlyBreakableByDragon = false;
+	bOnlyBreakableByPlayer = false;
+	BreakDelay = 0.0f;
 	bSingleUse = true;
 }
 
-void ABreakableObject::BeginPlay()
+void ABreakableObject::Interact_Implementation(AActor* Interactor)
 {
-	Super::BeginPlay();
-	CurrentHealth = MaxHealth;
-}
-
-void ABreakableObject::TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator)
-{
-	if (CurrentHealth <= 0.0f)
+	if (!bCanInteract || bHasBeenUsed)
 	{
 		return;
 	}
 
-	CurrentHealth -= Damage;
-	if (CurrentHealth <= 0.0f)
+	OnInteract(Interactor);
+}
+
+void ABreakableObject::TakeElementalDamage_Implementation(EElementalType Element, float Damage, AActor* DamageInstigator)
+{
+	if (bHasBeenUsed)
+	{
+		return;
+	}
+
+	if (bOnlyBreakableByDragon)
+	{
+		if (!DamageInstigator || !DamageInstigator->IsA(ADragonCompanion::StaticClass()))
+		{
+			return;
+		}
+	}
+
+	if (bOnlyBreakableByPlayer)
+	{
+		if (!DamageInstigator || !DamageInstigator->IsA(AAdvancedCharacter::StaticClass()))
+		{
+			return;
+		}
+	}
+
+	bHasBeenUsed = true;
+	StartBreakSequence();
+}
+
+void ABreakableObject::StartBreakSequence()
+{
+	OnBreakStarted();
+
+	if (BreakDelay > 0.0f)
+	{
+		GetWorldTimerManager().SetTimer(TimerHandle_BreakDelay, this, &ABreakableObject::BreakObject, BreakDelay, false);
+	}
+	else
 	{
 		BreakObject();
 	}
@@ -38,7 +74,7 @@ void ABreakableObject::BreakObject()
 
 	if (DestroyVFX)
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), DestroyVFX, GetActorLocation(), GetActorRotation());
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(GetWorld(), DestroyVFX, GetActorLocation(), GetActorRotation());
 	}
 
 	if (DestroySound)
@@ -74,9 +110,19 @@ void ABreakableObject::BreakObject()
 					{
 						if (Row->PickupClass)
 						{
-							FActorSpawnParameters SpawnParams;
-							SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-							GetWorld()->SpawnActor<AActor>(Row->PickupClass, GetActorLocation(), FRotator::ZeroRotator, SpawnParams);
+							FTransform SpawnTransform(FRotator::ZeroRotator, GetActorLocation());
+							ABasePickup* NewPickup = GetWorld()->SpawnActorDeferred<ABasePickup>(
+								Row->PickupClass,
+								SpawnTransform,
+								nullptr,
+								nullptr,
+								ESpawnActorCollisionHandlingMethod::AlwaysSpawn
+							);
+							if (NewPickup)
+							{
+								NewPickup->SetCollectionDelay(LootCollectionDelay);
+								NewPickup->FinishSpawning(SpawnTransform);
+							}
 						}
 						break;
 					}

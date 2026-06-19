@@ -94,6 +94,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loot")
 	FVector LootSpawnOffset;
 
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Loot")
+	float LootCollectionDelay;
+
 	UFUNCTION(BlueprintCallable, Category = "Loot")
 	void SpawnLootDrops();
 

@@ -99,16 +99,12 @@ protected:
 	UPROPERTY()
 	AActor* CurrentMoveTarget;
 
-	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	AActor* CommandTarget;
-
-	UPROPERTY(BlueprintReadOnly, Category = "AI")
-	bool bHasCommandTarget;
+	UPROPERTY(BlueprintReadWrite, Category = "AI")
+	AActor* PriorityTarget;
 
 	FTimerHandle TimerHandle_DecisionMaking;
 
 	void UpdateAI();
-	void UpdateCommandBehavior();
 
 	bool IsPlayingAttackMontage() const;
 
@@ -126,7 +122,10 @@ public:
 	void SetDragonElement(EElementalType NewElement);
 
 	UFUNCTION(BlueprintCallable, Category = "AI")
-	void CommandFireAtTarget(AActor* Target);
+	void SetPriorityTarget(AActor* Target);
+
+	UFUNCTION(BlueprintCallable, Category = "AI")
+	void ClearPriorityTarget();
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Progression")
 	class UParticleSystem* LevelUpVFX;
