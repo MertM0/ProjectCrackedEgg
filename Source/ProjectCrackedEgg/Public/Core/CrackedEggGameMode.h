@@ -30,7 +30,7 @@ protected:
 	UPROPERTY()
 	UUserWidget* ActiveVictoryWidget;
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadOnly, Category = "Game Flow")
 	TArray<ABaseEnemy*> RegisteredEnemies;
 
 	int32 AliveEnemyCount;

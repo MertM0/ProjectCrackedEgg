@@ -94,6 +94,7 @@ void ACrackedEggGameMode::OnEnemyKilled(ABaseEnemy* KilledEnemy)
 {
 	if (!IsValid(KilledEnemy)) return;
 
+	RegisteredEnemies.Remove(KilledEnemy);
 	AliveEnemyCount = FMath::Max(0, AliveEnemyCount - 1);
 
 	if (AliveEnemyCount <= 0)
