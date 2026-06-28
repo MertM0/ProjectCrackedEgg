@@ -4,7 +4,6 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "DrawDebugHelpers.h"
 #include "AIController.h"
 #include "Navigation/PathFollowingComponent.h"
 #include "Engine/OverlapResult.h"
@@ -427,7 +426,7 @@ void ADragonCompanion::PerformMeleeAttack()
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
 
-	DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * 75.0f), MeleeHitboxSize, GetActorQuat(), bHit ? FColor::Green : FColor::Red, false, 2.0f);
+
 
 	if (bHit && HitResult.GetActor())
 	{

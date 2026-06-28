@@ -353,8 +353,6 @@ void ABaseEnemy::PerformMeleeStrike()
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
 
-	DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * 75.0f), FVector(75.0f, 75.0f, 75.0f), GetActorQuat(), bHit ? FColor::Green : FColor::Red, false, 2.0f);
-
 	if (bHit && HitResult.GetActor())
 	{
 		AActor* HitActor = HitResult.GetActor();

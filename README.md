@@ -18,12 +18,12 @@ All core gameplay systems are built in **C++**, with Blueprints managing UI, vis
 
 ## ✨ Features
 
-- ⚔️ **Combat & Evasion** — Combo system (Light/Heavy attacks) and directional evade roll.
-- 🐉 **Dragon Companion** — Automatically follows and dynamically fights (melee claws or ranged projectiles).
-- 🧗 **Priority Target** — Command your Level 2+ dragon to destroy sealed walls.
-- ⚡ **Elemental Status Effects** — Burn (Fire) and Slow (Lightning) combat modifiers.
-- 📈 **Progression & Stats** — XP/leveling system with manual stat upgrades (Health, Stamina, Damage, Speed).
-- 🚪 **Progression Gating** — Key-locked doors, lever systems, and destructible obstacles.
+- ⚔️ **Combat & Evasion:** Combo system (Light/Heavy attacks) and directional evade roll.
+- 🐉 **Dragon Companion:** Automatically follows and dynamically fights (melee claws or ranged projectiles).
+- 🧗 **Priority Target:** Command your Level 2+ dragon to destroy sealed walls.
+- ⚡ **Elemental Status Effects:** Burn (Fire) and Slow (Lightning) combat modifiers.
+- 📈 **Progression & Stats:** XP/leveling system with manual stat upgrades (Health, Stamina, Damage, Speed).
+- 🚪 **Progression Gating:** Key-locked doors, lever systems, and destructible obstacles.
 
 ---
 
@@ -34,7 +34,7 @@ All core gameplay systems are built in **C++**, with Blueprints managing UI, vis
 | Move | `W` `A` `S` `D` |
 | Look | `Mouse` |
 | Jump | `Space` |
-| Evade Roll | `Left Ctrl` |
+| Dash | `Left Ctrl` |
 | Light Attack | `Left Mouse Button` |
 | Heavy Attack | `Right Mouse Button` |
 | Interact | `E` |
@@ -45,7 +45,7 @@ All core gameplay systems are built in **C++**, with Blueprints managing UI, vis
 ## 🚀 Getting Started
 
 ### 🎮 Option 1: Play the Build (itch.io)
-1. Download the packaged game from [itch.io] (Link will be added).
+1. Download the packaged game from [itch.io](https://mertm.itch.io/project-cracked-egg).
 2. Extract the ZIP file and run `ProjectCrackedEgg.exe`.
 
 ### 💻 Option 2: Clone & Run (GitHub)

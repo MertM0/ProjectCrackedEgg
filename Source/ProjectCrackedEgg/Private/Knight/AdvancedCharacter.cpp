@@ -9,7 +9,6 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "Engine/World.h"
-#include "DrawDebugHelpers.h"
 #include "Kismet/GameplayStatics.h"
 #include "CrackedEggGameMode.h"
 #include "Dragon/DragonCompanion.h"
@@ -479,12 +478,7 @@ void AAdvancedCharacter::ExecuteInteractionLineTrace()
 
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Visibility, BoxShape, CollisionParams);
 
-	FColor DebugColor = bHit ? FColor::Green : FColor::Red;
-	DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * (InteractionRange * 0.5f)), FVector(InteractionRange * 0.5f, InteractionBoxHalfExtents.Y, InteractionBoxHalfExtents.Z), GetActorQuat(), DebugColor, false, 2.0f, 0, 1.0f);
-	if (bHit)
-	{
-		DrawDebugPoint(GetWorld(), HitResult.ImpactPoint, 10.0f, FColor::Yellow, false, 2.0f);
-	}
+
 
 	if (bHit && HitResult.GetActor())
 	{
@@ -522,25 +516,17 @@ void AAdvancedCharacter::PerformWeaponSweep()
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
 
-	TArray<AActor*> Companions;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADragonCompanion::StaticClass(), Companions);
-	QueryParams.AddIgnoredActors(Companions);
-
 	FHitResult HitResult;
 	bool bHit = GetWorld()->SweepSingleByChannel(HitResult, StartLocation, EndLocation, GetActorQuat(), ECC_Pawn, BoxShape, QueryParams);
-
-	if (bHit)
-	{
-		DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * 75.0f), LightAttackHitboxSize, GetActorQuat(), FColor::Green, false, 2.0f);
-	}
-	else if (HitActorsDuringAttack.Num() <= 1)
-	{
-		DrawDebugBox(GetWorld(), StartLocation + (ForwardVector * 75.0f), LightAttackHitboxSize, GetActorQuat(), FColor::Red, false, 2.0f);
-	}
 
 	if (bHit && HitResult.GetActor())
 	{
 		AActor* HitActor = HitResult.GetActor();
+		if (HitActor->IsA(ADragonCompanion::StaticClass()))
+		{
+			return;
+		}
+
 		HitActorsDuringAttack.Add(HitActor);
 		LastAttackedEnemy = HitActor;
 		
@@ -561,26 +547,20 @@ void AAdvancedCharacter::PerformHeavySweep()
 	QueryParams.AddIgnoredActor(this);
 	QueryParams.AddIgnoredActors(HitActorsDuringAttack);
 
-	TArray<AActor*> Companions;
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ADragonCompanion::StaticClass(), Companions);
-	QueryParams.AddIgnoredActors(Companions);
-
 	TArray<FHitResult> HitResults;
 	bool bHit = GetWorld()->SweepMultiByChannel(HitResults, SweepLocation, SweepLocation, FQuat::Identity, ECC_Pawn, SphereShape, QueryParams);
-
-	DrawDebugSphere(GetWorld(), SweepLocation, HeavyAttackHitboxRadius, 12, bHit ? FColor::Green : FColor::Red, false, 2.0f);
 
 	if (bHit)
 	{
 		for (const FHitResult& Hit : HitResults)
 		{
 			AActor* HitActor = Hit.GetActor();
-			if (HitActor && !HitActorsDuringAttack.Contains(HitActor) && HitActor->Implements<UGameplayInterface>())
+			if (HitActor && !HitActor->IsA(ADragonCompanion::StaticClass()) && !HitActorsDuringAttack.Contains(HitActor) && HitActor->Implements<UGameplayInterface>())
 			{
 				HitActorsDuringAttack.Add(HitActor);
 				LastAttackedEnemy = HitActor;
 				
-				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier * DamageModifier) : (15.0f * DamageModifier);
+				float Damage = AttributeComponent ? (AttributeComponent->GetAttributeValue(EAttributeType::BaseDamage) * HeavyAttackDamageMultiplier * DamageModifier) : (15.0f * HeavyAttackDamageMultiplier);
 				IGameplayInterface::Execute_TakeElementalDamage(HitActor, EElementalType::None, Damage, this);
 			}
 		}
