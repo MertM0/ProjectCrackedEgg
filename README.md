@@ -4,7 +4,7 @@
 
 ![Unreal Engine](https://img.shields.io/badge/Unreal%20Engine-5.7-313131?logo=unrealengine&logoColor=white)
 ![C++](https://img.shields.io/badge/C%2B%2B-Core%20Logic-00599C?logo=cplusplus&logoColor=white)
-![Status](https://img.shields.io/badge/status-completed-brightgreen)
+![Status](https://img.shields.io/badge/status-prototype-green)
 
 ---
 
