@@ -1,4 +1,4 @@
-# 🥚 Cracked Egg
+# 🥚 Project: Cracked Egg
 
 > A third-person action-adventure dungeon crawler. Fight enemies, hatch your dragon, and escape the dungeon.
 
@@ -10,7 +10,7 @@
 
 ## 📖 About
 
-You play as a knight trapped in a dungeon. Along the way, you discover a mysterious egg and hatch a **Dragon Companion** (Fire or Lightning). Together, you must defeat enemies, level up, and unlock the dragon's **Level 2** ranged attacks to break sealed walls. Defeat all enemies to activate the Victory Portal and escape.
+You play as a knight trapped in a dungeon. Along the way, you discover a mysterious egg and hatch a **Dragon Companion** (Fire or Lightning). Together, you must defeat enemies, level up, and unlock the dragon's **Level 2** ranged attacks to break sealed walls. Defeat all enemies to activate the Portal and escape.
 
 All core gameplay systems are built in **C++**, with Blueprints managing UI, visuals, and animations.
 
@@ -50,7 +50,6 @@ All core gameplay systems are built in **C++**, with Blueprints managing UI, vis
 
 ### 💻 Option 2: Clone & Run (GitHub)
 1. Clone this repository into your Unreal Projects directory.
-2. Download the required asset packages from [Asset Download Link] (Link will be added) and extract them into the `Content/` folder.
+2. Download the required asset packages from [Asset Download Link](https://drive.google.com/drive/folders/1L2CoibyiwJ1nVFC8Ta5w-AYs_7kYAIZy) and extract them into the `Content/` folder.
 3. Right-click `ProjectCrackedEgg.uproject` and select **Generate Visual Studio project files**.
-4. Open the `.sln` file and build the project in **Development Editor / Win64**.
-5. Launch the project in Unreal Editor 5.7.
+4. Launch the project in Unreal Editor 5.7.
